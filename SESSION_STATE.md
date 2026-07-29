@@ -24,31 +24,31 @@
 When resuming the session, execute the following steps in sequence:
 
 ### Step 1: Supabase Schema & Seed Data (`supabase/`)
-- [ ] Create `supabase/migrations/0001_initial_schema.sql`:
+- [x] Create `supabase/migrations/0001_initial_schema.sql`:
   - Tables: `User`, `Team`, `TeamMembership`, `CheckIn`, `CoachObservation`, `PhysioNote`, `RiskFlag`.
   - Enforce `ON DELETE SET NULL` on `coach_id` columns.
-- [ ] Create `supabase/migrations/0002_rls_policies.sql` for Row-Level Security across all 5 roles (`admin`, `coach`, `physio`, `academic`, `athlete`).
-- [ ] Create `supabase/seed.sql` with rich sample data (athletes, teams, check-in history, physio logs, and risk flags) for instant local testing and demoing.
+- [x] Create `supabase/migrations/0002_rls_policies.sql` for Row-Level Security across all 5 roles (`admin`, `coach`, `physio`, `academic`, `athlete`).
+- [x] Create `supabase/seed.sql` with rich sample data (athletes, teams, check-in history, physio logs, and risk flags) for instant local testing and demoing.
 
 ### Step 2: Risk Scoring Engine & Validators (`src/lib/`)
-- [ ] Implement `src/lib/risk-scoring.ts` matching Section 3.5 of `spec.md`:
+- [x] Implement `src/lib/risk-scoring.ts` matching Section 3.5 of `spec.md`:
   - **Watch**: 7-day soreness avg ≥ 4, OR 7-day sleep avg < 6 hrs, OR no check-in for 4+ days.
   - **High**: 2+ Watch conditions together, OR active injury note + any Watch condition.
   - Return human-readable reasons (e.g. *"7-day average sleep is critical (5.2 hrs)"*).
-- [ ] Implement `src/lib/validators.ts` and Supabase clients (`client.ts`, `server.ts`).
-- [ ] Add an interactive **Demo Mode / Role Switcher** so users can toggle between all 5 roles locally even without active Supabase credentials.
+- [x] Implement `src/lib/validators.ts` and Supabase clients (`client.ts`, `server.ts`).
+- [x] Add an interactive **Demo Mode / Role Switcher** so users can toggle between all 5 roles locally even without active Supabase credentials.
 
 ### Step 3: UI Design System & Core Components (`src/components/`)
-- [ ] Build responsive, mobile-first design system with rich dark-mode aesthetics, smooth gradients, and glowing risk indicators.
-- [ ] Implement UI primitives: cards, badges, alerts drawer, and mobile-friendly sliders/numeric inputs for check-ins.
+- [x] Build responsive, mobile-first design system with rich dark-mode aesthetics, smooth gradients, and glowing risk indicators.
+- [x] Create core reusable UI components (`RiskBadge`, `RoleSwitcher`, `CheckInModal`, `ObservationModal`, `PhysioModal`, `ReassignCoachModal`, `RiskTrendChart`).
+- [x] Ensure components work cleanly across mobile (375px), tablet (768px), and desktop (1280px) breakpoints.
 
 ### Step 4: Role Dashboards & Flows (`src/app/dashboard/`)
-- [ ] **Athlete (`/dashboard/athlete`)**: One-handed self-report check-in form (Sleep, Soreness, Mood, optional RPE & notes) + personal check-in history.
-- [ ] **Coach (`/dashboard/coach` & `/dashboard/coach/[athleteId]`)**:
-  - Roster table & grid view with real-time risk badges (`Low`, `Watch`, `High`) and trend arrows.
-  - Athlete detail view with 14-day/30-day trend charts, physio notes feed, and observation quick-logger.
-- [ ] **Physio (`/dashboard/physio`)**: Injury & treatment logger with status tags (`active`, `recovering`, `cleared`).
-- [ ] **Admin (`/dashboard/admin`)**: Team management and athlete re-assignment tool (reassign athletes between coaches without data loss).
+- [x] **Athlete Dashboard** (`/dashboard/athlete`): One-handed check-in slider form, personal readiness badge with explainable reason, 7-day average metrics, and check-in history table.
+- [x] **Coach Dashboard** (`/dashboard/coach`): Roster overview table with real-time risk flags (`Low`, `Watch`, `High`), days since check-in, search/filter, and athlete detail view (`/dashboard/coach/[athleteId]`).
+- [x] **Physio Dashboard** (`/dashboard/physio`): Injury & treatment logger with status tags (`active`, `recovering`, `cleared`) and team medical log table.
+- [x] **Admin Dashboard** (`/dashboard/admin`): Staff overview table and zero-data-loss coach reassignment tool (`ON DELETE SET NULL`).
+- [x] **Home Hub** (`/`): High-impact landing page with live pilot stats and 4 role portal cards.
 
 ---
 
