@@ -2,7 +2,7 @@
 
 // =============================================================================
 // AI Athlete Growth Platform
-// Athlete Dashboard (/dashboard/athlete) — Full AI Insights, Tasks, Recovery & Opportunities
+// Athlete Dashboard (/dashboard/athlete) — Full AI Insights, Chat Assistant, & Visual Analytics
 // =============================================================================
 
 import React, { useState } from 'react';
@@ -14,9 +14,19 @@ import { AIInsightCard } from '../../../components/ui/AIInsightCard';
 import { TaskCard } from '../../../components/ui/TaskCard';
 import { ScholarshipCard } from '../../../components/ui/ScholarshipCard';
 import { TournamentCard } from '../../../components/ui/TournamentCard';
+import { AIChatAssistant } from '../../../components/ui/AIChatAssistant';
+import {
+  SleepTrendsChart,
+  SorenessTrendsChart,
+  MoodTrendsChart,
+  RecoveryTimelineChart,
+  PerformanceProgressionChart,
+} from '../../../components/charts';
+import { generateAthleteSummary, AthleteContextInput } from '../../../services/ai';
 import {
   Activity,
   Award,
+  BarChart2,
   Calendar,
   CheckCircle2,
   CheckSquare,
@@ -25,6 +35,7 @@ import {
   GraduationCap,
   HeartPulse,
   Info,
+  MessageSquare,
   Moon,
   Plus,
   Smile,
@@ -37,6 +48,7 @@ export default function AthleteDashboardPage() {
   const {
     activeUser,
     users,
+    checkIns,
     getAthleteRiskSummary,
     tasks,
     scholarships,
@@ -53,17 +65,35 @@ export default function AthleteDashboardPage() {
     users[5];
 
   const summary = getAthleteRiskSummary(athleteUser.id);
+  const athleteCheckIns = checkIns.filter((ci) => ci.athlete_id === athleteUser.id);
   const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
+  const [activeChartTab, setActiveChartTab] = useState<
+    'sleep' | 'soreness' | 'mood' | 'recovery' | 'readiness'
+  >('sleep');
+  const [isFloatingChatOpen, setIsFloatingChatOpen] = useState(false);
 
   // Filter tasks for this athlete
   const athleteTasks = tasks.filter((t) => t.athlete_id === athleteUser.id);
-  const pendingTasks = athleteTasks.filter((t) => t.status !== 'Completed');
-  const completedTasks = athleteTasks.filter((t) => t.status === 'Completed');
 
-  // Filter AI insights for this athlete (fallback to first insight if general)
+  // Filter AI insights for this athlete
   const athleteInsights = aiInsights.filter(
     (i) => !i.athlete_id || i.athlete_id === athleteUser.id
   );
+
+  // Prepare full AthleteContextInput for AI Assistant
+  const athleteContext: AthleteContextInput = {
+    athlete: athleteUser,
+    currentRisk: summary.currentRisk,
+    checkIns: athleteCheckIns,
+    physioNotes: summary.activeInjuryNotes,
+    observations: summary.recentObservations,
+    sevenDayAvgSleep: summary.sevenDayAvgSleep,
+    sevenDayAvgSoreness: summary.sevenDayAvgSoreness,
+    sevenDayAvgMood: summary.sevenDayAvgMood,
+    daysSinceLastCheckIn: 0,
+  };
+
+  const aiReadinessSummary = generateAthleteSummary(athleteContext);
 
   return (
     <div className="space-y-8 pb-12 transition-colors duration-300">
@@ -88,7 +118,7 @@ export default function AthleteDashboardPage() {
         </div>
 
         {/* Quick Check-In CTA */}
-        <div>
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setIsCheckInModalOpen(true)}
             className="inline-flex items-center gap-2 rounded-2xl bg-blue-900 px-6 py-3.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-blue-800 dark:bg-emerald-600 dark:hover:bg-emerald-700"
@@ -99,33 +129,80 @@ export default function AthleteDashboardPage() {
         </div>
       </div>
 
-      {/* 2. MOST IMPORTANT SECTION: AI INSIGHTS CARD */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
-              AI Physiological &amp; Performance Insights
-            </h2>
+      {/* 2. AI READINESS SUMMARY & RECOVERY FOCUS CARD */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                AI Physiological &amp; Performance Insights
+              </h2>
+            </div>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Deterministic 7-day trend analysis
+            </span>
           </div>
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-            Real-time recommendations from 7-day trend analysis
-          </span>
+
+          {athleteInsights.length > 0 ? (
+            <div className="space-y-4">
+              {athleteInsights.map((insight) => (
+                <AIInsightCard key={insight.id} insight={insight} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                All physiological indicators are within optimal baseline!
+              </p>
+            </div>
+          )}
         </div>
 
-        {athleteInsights.length > 0 ? (
-          <div className="space-y-4">
-            {athleteInsights.map((insight) => (
-              <AIInsightCard key={insight.id} insight={insight} />
-            ))}
+        {/* Natural Language Readiness Narrative Card */}
+        <div className="flex flex-col justify-between rounded-3xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/70 to-blue-50/40 p-6 shadow-sm dark:border-emerald-900/50 dark:from-slate-900 dark:to-emerald-950/20">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                AI Executive Assessment
+              </span>
+              <span className="text-xs font-bold text-slate-400">Rule-Based (§3.5)</span>
+            </div>
+            <h3 className="mt-3 text-base font-black text-slate-900 dark:text-white">
+              {aiReadinessSummary.title}
+            </h3>
+            <p className="mt-2 text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+              {aiReadinessSummary.summaryText}
+            </p>
+
+            <div className="mt-4 space-y-2">
+              {aiReadinessSummary.keyPoints.map((kp, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300">
+                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                  <span>{kp.replace(/\*\*/g, '')}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        ) : (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-sm font-bold text-slate-900 dark:text-white">
-              All physiological indicators are within optimal baseline!
+
+          <div className="mt-6 border-t border-emerald-200/60 pt-4 dark:border-emerald-900/40">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Suggested Recovery Focus
+            </p>
+            <div className="mt-2 space-y-1 text-xs font-semibold text-emerald-900 dark:text-emerald-300">
+              {aiReadinessSummary.suggestedFocus.length > 0 ? (
+                aiReadinessSummary.suggestedFocus.map((focus, idx) => (
+                  <p key={idx}>• {focus.replace(/\*\*/g, '')}</p>
+                ))
+              ) : (
+                <p>• Maintain consistent sleep routine (&gt; 7.5 hrs/night)</p>
+              )}
+            </div>
+            <p className="mt-3 text-[9px] italic text-slate-500 dark:text-slate-400">
+              Note: Recommendations are informational and based on check-in data. They do not constitute personalized medical advice.
             </p>
           </div>
-        )}
+        </div>
       </div>
 
       {/* 3. Performance Summary & Recovery Status */}
@@ -194,7 +271,104 @@ export default function AthleteDashboardPage() {
         </div>
       </div>
 
-      {/* 4. Today's Training Tasks */}
+      {/* 4. INTERACTIVE RECHARTS VISUAL ANALYTICS */}
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <BarChart2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
+              Longitudinal Readiness &amp; Recovery Analytics
+            </h2>
+          </div>
+
+          {/* Interactive Chart Tab Selector */}
+          <div className="inline-flex flex-wrap rounded-2xl bg-slate-100 p-1 dark:bg-slate-800">
+            <button
+              onClick={() => setActiveChartTab('sleep')}
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                activeChartTab === 'sleep'
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+            >
+              Sleep Trends
+            </button>
+            <button
+              onClick={() => setActiveChartTab('soreness')}
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                activeChartTab === 'soreness'
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+            >
+              Soreness Trends
+            </button>
+            <button
+              onClick={() => setActiveChartTab('mood')}
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                activeChartTab === 'mood'
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+            >
+              Mood Trends
+            </button>
+            <button
+              onClick={() => setActiveChartTab('recovery')}
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                activeChartTab === 'recovery'
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+            >
+              Recovery Correlation
+            </button>
+            <button
+              onClick={() => setActiveChartTab('readiness')}
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                activeChartTab === 'readiness'
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+            >
+              Readiness Index
+            </button>
+          </div>
+        </div>
+
+        {activeChartTab === 'sleep' && <SleepTrendsChart checkIns={athleteCheckIns} />}
+        {activeChartTab === 'soreness' && <SorenessTrendsChart checkIns={athleteCheckIns} />}
+        {activeChartTab === 'mood' && <MoodTrendsChart checkIns={athleteCheckIns} />}
+        {activeChartTab === 'recovery' && <RecoveryTimelineChart checkIns={athleteCheckIns} />}
+        {activeChartTab === 'readiness' && (
+          <PerformanceProgressionChart checkIns={athleteCheckIns} />
+        )}
+      </div>
+
+      {/* 5. INTERACTIVE CONVERSATIONAL AI ATHLETE ASSISTANT */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
+              Interactive AI Athlete Assistant
+            </h2>
+          </div>
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Ask questions about your risk flags, sleep trends, or recovery habits
+          </span>
+        </div>
+
+        <AIChatAssistant
+          role="athlete"
+          athleteContext={athleteContext}
+          title="Personal Athlete Intelligence Assistant"
+          subtitle="Explains your readiness flags deterministically & supports session memory"
+          embedded={true}
+        />
+      </div>
+
+      {/* 6. Today's Training Tasks */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -234,7 +408,7 @@ export default function AthleteDashboardPage() {
         )}
       </div>
 
-      {/* 5. Coach Feedback & Recent Activity */}
+      {/* 7. Coach Feedback & Recent Activity */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Coach Observations */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -308,7 +482,7 @@ export default function AthleteDashboardPage() {
         </div>
       </div>
 
-      {/* 6. Upcoming Tournaments & Scholarship Opportunities */}
+      {/* 8. Upcoming Tournaments & Scholarship Opportunities */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Scholarships Widget */}
         <div className="space-y-3">

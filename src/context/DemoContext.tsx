@@ -27,6 +27,10 @@ import {
 
 interface DemoContextType {
   isDemoMode: boolean;
+  isAuthenticated: boolean;
+  login: (email: string, password?: string) => Promise<boolean>;
+  loginAsDemoRole: (role: UserRole) => void;
+  logout: () => void;
   team: Team;
   users: User[];
   memberships: TeamMembership[];
@@ -104,6 +108,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [activeUserId, setActiveUserId] = useState<string>(
     '00000000-0000-4000-8000-000000000002'
   );
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   // Load from localStorage on client mount
   useEffect(() => {
@@ -126,6 +131,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
           if (parsed.profiles) setProfiles(parsed.profiles);
           if (parsed.activeUserId) {
             setActiveUserId(parsed.activeUserId);
+          }
+          if (parsed.isAuthenticated !== undefined) {
+            setIsAuthenticated(parsed.isAuthenticated);
           }
         }
       }
@@ -153,6 +161,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
           aiInsights,
           profiles,
           activeUserId,
+          isAuthenticated,
         })
       );
     } catch (e) {
@@ -172,6 +181,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     aiInsights,
     profiles,
     activeUserId,
+    isAuthenticated,
   ]);
 
   const activeUser =
@@ -184,6 +194,36 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
   const switchUser = (userId: string) => {
     setActiveUserId(userId);
+  };
+
+  const loginAsDemoRole = (role: UserRole) => {
+    let targetUserId = '00000000-0000-4000-8000-000000000002'; // Coach default
+    if (role === 'athlete') targetUserId = '33333333-3333-4333-8333-333333333301'; // Maya Lin
+    else if (role === 'physio') targetUserId = '00000000-0000-4000-8000-000000000004'; // Dr. Chen
+    else if (role === 'academic') targetUserId = '00000000-0000-4000-8000-000000000005'; // Prof. Pendelton
+    else if (role === 'admin') targetUserId = '00000000-0000-4000-8000-000000000001'; // Dr. Jenkins
+
+    setActiveUserId(targetUserId);
+    setIsAuthenticated(true);
+  };
+
+  const login = async (email: string, password?: string): Promise<boolean> => {
+    const foundUser = users.find(
+      (u) => u.email.toLowerCase() === email.toLowerCase()
+    );
+    if (foundUser) {
+      setActiveUserId(foundUser.id);
+      setIsAuthenticated(true);
+      return true;
+    }
+    // If not in existing demo users, log in as Maya Lin or Marcus Vance by default
+    setActiveUserId('33333333-3333-4333-8333-333333333301');
+    setIsAuthenticated(true);
+    return true;
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
   };
 
   /**
@@ -395,6 +435,10 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     <DemoContext.Provider
       value={{
         isDemoMode: true,
+        isAuthenticated,
+        login,
+        loginAsDemoRole,
+        logout,
         team,
         users,
         memberships,

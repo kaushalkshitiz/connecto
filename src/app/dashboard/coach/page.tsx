@@ -2,7 +2,7 @@
 
 // =============================================================================
 // AI Athlete Growth Platform
-// Coach Dashboard (/dashboard/coach) — Roster, AI Insights, Task Assignment & Alerts
+// Coach Dashboard (/dashboard/coach) — Roster, AI Insights, Chat Assistant, & Analytics
 // =============================================================================
 
 import React, { useState } from 'react';
@@ -11,17 +11,30 @@ import { useDemo } from '../../../context/DemoContext';
 import { RiskBadge } from '../../../components/ui/RiskBadge';
 import { AIInsightCard } from '../../../components/ui/AIInsightCard';
 import { TaskAssignModal } from '../../../components/forms/TaskAssignModal';
+import { AIChatAssistant } from '../../../components/ui/AIChatAssistant';
+import {
+  RiskTimelineChart,
+  CheckInCompletionChart,
+  RecoveryTimelineChart,
+} from '../../../components/charts';
+import {
+  generateCoachSummary,
+  summarizeRiskChanges,
+  CoachContextInput,
+} from '../../../services/ai';
 import { RiskLevel, TrainingTask } from '../../../types';
 import {
   Activity,
   AlertTriangle,
   ArrowRight,
+  BarChart2,
   Calendar,
   CheckCircle2,
   CheckSquare,
   Clock,
   Filter,
   Flame,
+  MessageSquare,
   Moon,
   Plus,
   Search,
@@ -43,6 +56,7 @@ export default function CoachDashboardPage() {
   const [filterLevel, setFilterLevel] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [activeChartTab, setActiveChartTab] = useState<'timeline' | 'adherence' | 'recovery'>('timeline');
 
   // Find athletes
   const athleteUsers = users.filter((u) =>
@@ -92,6 +106,21 @@ export default function CoachDashboardPage() {
       item.athlete.email.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
+
+  // Build CoachContextInput for AI Service
+  const coachContext: CoachContextInput = {
+    teamId: team.id,
+    teamName: team.name,
+    athletes: athleteUsers,
+    profiles: [],
+    riskFlags: riskFlags,
+    checkIns: checkIns,
+    physioNotes: [],
+    observations: [],
+  };
+
+  const aiTeamSummary = generateCoachSummary(coachContext);
+  const riskChanges = summarizeRiskChanges(coachContext);
 
   return (
     <div className="space-y-8 pb-12 transition-colors duration-300">
@@ -188,28 +217,147 @@ export default function CoachDashboardPage() {
         </div>
       </div>
 
-      {/* 3. MOST IMPORTANT SECTION: AI RECOMMENDATIONS */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
-              AI Coach Intelligence &amp; Load Recommendations
-            </h2>
+      {/* 3. AI ROSTER SUMMARY & RECOMMENDATIONS */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                AI Coach Intelligence &amp; Load Recommendations
+              </h2>
+            </div>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Synthesized from daily athlete readiness logs
+            </span>
           </div>
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-            Synthesized from daily athlete readiness &amp; physio logs
-          </span>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {aiInsights.slice(0, 2).map((insight) => (
+              <AIInsightCard key={insight.id} insight={insight} />
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {aiInsights.slice(0, 2).map((insight) => (
-            <AIInsightCard key={insight.id} insight={insight} />
-          ))}
+        {/* Executive Team Readiness Report Card */}
+        <div className="flex flex-col justify-between rounded-3xl border border-blue-200/80 bg-gradient-to-br from-blue-50/70 via-white to-emerald-50/40 p-6 shadow-sm dark:border-blue-900/50 dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/20">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-blue-900 dark:bg-blue-950 dark:text-blue-300">
+                AI Roster Executive Report
+              </span>
+              <span className="text-xs font-bold text-slate-400">Deterministic (§3.5)</span>
+            </div>
+            <h3 className="mt-3 text-base font-black text-slate-900 dark:text-white">
+              {team.name} Roster Overview
+            </h3>
+            <p className="mt-2 text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+              {aiTeamSummary.summaryText}
+            </p>
+
+            <div className="mt-4 space-y-2">
+              {aiTeamSummary.keyTrends.map((trend, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300">
+                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+                  <span>{trend.replace(/\*\*/g, '')}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-6 border-t border-blue-200/60 pt-4 dark:border-blue-900/40">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Risk Explanation Summary
+            </p>
+            <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+              {riskChanges.headline}: {riskChanges.explanation}
+            </p>
+            <div className="mt-2 space-y-1 text-xs font-semibold text-slate-800 dark:text-slate-200">
+              {riskChanges.changes.slice(0, 2).map((c, idx) => (
+                <p key={idx}>
+                  • <span className="text-rose-600 dark:text-rose-400 font-bold">{c.athleteName} ({c.level})</span>: {c.reason}
+                </p>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* 4. Pending Task Reviews Widget */}
+      {/* 4. INTERACTIVE RECHARTS TEAM VISUAL ANALYTICS */}
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <BarChart2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
+              Team Readiness &amp; Check-In Visual Analytics
+            </h2>
+          </div>
+
+          <div className="inline-flex flex-wrap rounded-2xl bg-slate-100 p-1 dark:bg-slate-800">
+            <button
+              onClick={() => setActiveChartTab('timeline')}
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                activeChartTab === 'timeline'
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+            >
+              Risk Timeline
+            </button>
+            <button
+              onClick={() => setActiveChartTab('adherence')}
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                activeChartTab === 'adherence'
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+            >
+              Check-In Adherence
+            </button>
+            <button
+              onClick={() => setActiveChartTab('recovery')}
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                activeChartTab === 'recovery'
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+            >
+              Recovery Correlation
+            </button>
+          </div>
+        </div>
+
+        {activeChartTab === 'timeline' && <RiskTimelineChart riskFlags={riskFlags} />}
+        {activeChartTab === 'adherence' && (
+          <CheckInCompletionChart checkIns={checkIns} totalAthletes={athleteUsers.length} />
+        )}
+        {activeChartTab === 'recovery' && <RecoveryTimelineChart checkIns={checkIns} />}
+      </div>
+
+      {/* 5. INTERACTIVE CONVERSATIONAL AI COACH ASSISTANT */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
+              Interactive AI Roster Assistant
+            </h2>
+          </div>
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Ask which athletes need attention, check missing check-ins, or summarize trends
+          </span>
+        </div>
+
+        <AIChatAssistant
+          role="coach"
+          coachContext={coachContext}
+          title="Coach Roster Intelligence Assistant"
+          subtitle="Real-time roster risk analysis & athlete attention monitor"
+          embedded={true}
+        />
+      </div>
+
+      {/* 6. Pending Task Reviews Widget */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
           <div className="flex items-center gap-2">
@@ -260,7 +408,7 @@ export default function CoachDashboardPage() {
         )}
       </div>
 
-      {/* 5. Athlete Roster & Performance Alerts Table */}
+      {/* 7. Athlete Roster & Performance Alerts Table */}
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">

@@ -9,6 +9,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useDemo } from '../../context/DemoContext';
+import { getDashboardPathForRole } from '../../lib/rbac';
 import {
   Activity,
   Award,
@@ -19,6 +20,7 @@ import {
   GraduationCap,
   HeartPulse,
   LayoutDashboard,
+  LogOut,
   ShieldAlert,
   Trophy,
   User,
@@ -28,14 +30,14 @@ import {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { activeRole, team } = useDemo();
+  const { activeRole, team, logout } = useDemo();
 
   const isCoachOrStaff = activeRole === 'coach' || activeRole === 'admin' || activeRole === 'physio';
 
   const navItems = [
     {
       label: 'Overview',
-      href: isCoachOrStaff ? '/dashboard/coach' : '/dashboard/athlete',
+      href: getDashboardPathForRole(activeRole),
       icon: LayoutDashboard,
       roles: ['coach', 'athlete', 'physio', 'admin', 'academic'],
     },
@@ -56,6 +58,12 @@ export function Sidebar() {
       label: 'Scholarships',
       href: '/dashboard/scholarships',
       icon: GraduationCap,
+      roles: ['coach', 'athlete', 'physio', 'admin', 'academic'],
+    },
+    {
+      label: 'Academic & Exams',
+      href: '/dashboard/academic',
+      icon: BookOpen,
       roles: ['coach', 'athlete', 'physio', 'admin', 'academic'],
     },
     {
@@ -145,6 +153,17 @@ export function Sidebar() {
             );
           })}
         </nav>
+
+        <div className="pt-2">
+          <Link
+            href="/login"
+            onClick={() => logout()}
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-medium text-rose-600 transition-all hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
+          >
+            <LogOut size={17} />
+            <span>Log Out</span>
+          </Link>
+        </div>
       </div>
 
       {/* Bottom section: AI Growth Engine Card */}

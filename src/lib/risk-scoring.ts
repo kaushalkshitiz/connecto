@@ -13,7 +13,6 @@
 
 import {
   CheckIn,
-  PhysioNote,
   RiskCalculationInput,
   RiskCalculationResult,
   RiskFlag,

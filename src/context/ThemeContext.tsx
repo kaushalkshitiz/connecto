@@ -25,7 +25,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    queueMicrotask(() => setMounted(true));
     try {
       const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode | null;
       const root = document.documentElement;

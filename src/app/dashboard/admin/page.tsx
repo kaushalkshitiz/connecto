@@ -2,29 +2,45 @@
 
 // =============================================================================
 // Athlete Risk Intelligence Platform
-// Admin Dashboard — Full White & Dark UI support, roster security & oversight
+// Admin Dashboard — Full UI support, AI Organization Assistant, & Reports Archive
 // =============================================================================
 
 import React, { useState } from 'react';
 import { useDemo } from '../../../context/DemoContext';
 import { RiskBadge } from '../../../components/ui/RiskBadge';
 import { ReassignCoachModal } from '../../../components/forms/ReassignCoachModal';
+import { AIChatAssistant } from '../../../components/ui/AIChatAssistant';
+import {
+  RiskTimelineChart,
+  CheckInCompletionChart,
+} from '../../../components/charts';
+import {
+  generateDepartmentSummary,
+  generateWeeklyReport,
+  generateMonthlyReport,
+  CoachContextInput,
+} from '../../../services/ai';
 import { RiskLevel } from '../../../types';
 import {
+  Award,
+  BarChart2,
+  Database,
+  FileText,
+  Lock,
+  MessageSquare,
   ShieldAlert,
+  Sparkles,
   Users,
   UserCheck,
-  Award,
-  Database,
-  Lock,
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
-  const { users, memberships, team, riskFlags } = useDemo();
+  const { users, memberships, team, riskFlags, checkIns, aiInsights } = useDemo();
 
   const [reassignModalAthleteId, setReassignModalAthleteId] = useState<
     string | null
   >(null);
+  const [activeReportTab, setActiveReportTab] = useState<'dept' | 'weekly' | 'monthly'>('dept');
 
   const staffUsers = users.filter((u) =>
     memberships.some((m) => m.user_id === u.id && m.role !== 'athlete')
@@ -33,6 +49,22 @@ export default function AdminDashboardPage() {
   const athleteUsers = users.filter((u) =>
     memberships.some((m) => m.user_id === u.id && m.role === 'athlete')
   );
+
+  // Prepare CoachContextInput for department-wide AI reporting
+  const deptContext: CoachContextInput = {
+    teamId: team.id,
+    teamName: team.name,
+    athletes: athleteUsers,
+    profiles: [],
+    riskFlags: riskFlags,
+    checkIns: checkIns,
+    physioNotes: [],
+    observations: [],
+  };
+
+  const deptSummaryReport = generateDepartmentSummary(deptContext);
+  const weeklyReport = generateWeeklyReport(deptContext);
+  const monthlyReport = generateMonthlyReport(deptContext);
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -128,6 +160,110 @@ export default function AdminDashboardPage() {
             {athleteUsers.length}
           </p>
         </div>
+      </div>
+
+      {/* NEW: EXECUTIVE AI REPORTS ARCHIVE & SUMMARY CARDS */}
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+              AI Executive Reports Archive &amp; Department Overview
+            </h2>
+          </div>
+
+          <div className="inline-flex flex-wrap rounded-2xl bg-slate-100 p-1 dark:bg-slate-800">
+            <button
+              onClick={() => setActiveReportTab('dept')}
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                activeReportTab === 'dept'
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+            >
+              Department Summary
+            </button>
+            <button
+              onClick={() => setActiveReportTab('weekly')}
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                activeReportTab === 'weekly'
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+            >
+              Weekly Report
+            </button>
+            <button
+              onClick={() => setActiveReportTab('monthly')}
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                activeReportTab === 'monthly'
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+            >
+              Monthly Report
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-purple-200/80 bg-gradient-to-br from-purple-50/70 via-white to-slate-50 p-6 shadow-sm dark:border-purple-900/50 dark:from-slate-900 dark:via-slate-900 dark:to-purple-950/20">
+          <div className="flex items-center justify-between border-b border-purple-100 pb-4 dark:border-purple-900/40">
+            <div>
+              <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-purple-900 dark:bg-purple-950 dark:text-purple-300">
+                AIInsightReport Type: {activeReportTab.toUpperCase()}
+              </span>
+              <h3 className="mt-2 text-lg font-black text-slate-900 dark:text-white">
+                {activeReportTab === 'dept' && deptSummaryReport.title}
+                {activeReportTab === 'weekly' && weeklyReport.title}
+                {activeReportTab === 'monthly' && monthlyReport.title}
+              </h3>
+            </div>
+            <span className="text-xs font-bold text-slate-400">
+              Deterministic Rule Engine (§3.5 / §4.7)
+            </span>
+          </div>
+
+          <div className="mt-4 whitespace-pre-wrap text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+            {activeReportTab === 'dept' && deptSummaryReport.summary_text}
+            {activeReportTab === 'weekly' && weeklyReport.summary_text}
+            {activeReportTab === 'monthly' && monthlyReport.summary_text}
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-4 border-t border-purple-100 pt-3 dark:border-purple-900/40 text-xs font-bold text-purple-900 dark:text-purple-300">
+            <span>High Risk: {deptSummaryReport.metrics?.highRiskCount ?? 2} Athletes</span>
+            <span>Watch Risk: {deptSummaryReport.metrics?.watchCount ?? 2} Athletes</span>
+            <span>Data Retention: 100% Preserved</span>
+          </div>
+        </div>
+      </div>
+
+      {/* RECHARTS ORGANIZATION VISUAL ANALYTICS */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <RiskTimelineChart riskFlags={riskFlags} />
+        <CheckInCompletionChart checkIns={checkIns} totalAthletes={athleteUsers.length} />
+      </div>
+
+      {/* INTERACTIVE CONVERSATIONAL AI ADMIN ASSISTANT */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+              Interactive AI Organization Assistant
+            </h2>
+          </div>
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Ask for a team health overview, most common Watch reasons, or injury statistics
+          </span>
+        </div>
+
+        <AIChatAssistant
+          role="admin"
+          coachContext={deptContext}
+          title="Organization Health & Risk Governance Assistant"
+          subtitle="Monitors department caseloads, RLS compliance, & check-in completeness"
+          embedded={true}
+        />
       </div>
 
       {/* Staff Members Table */}

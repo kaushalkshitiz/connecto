@@ -188,3 +188,44 @@ export interface AthleteProfile {
   training_streak: number; // e.g. 14 days
 }
 
+// =============================================================================
+// AI Assistant & AIInsightReport Types (Phase 2 / AI Extension)
+// =============================================================================
+
+export type AIInsightReportType =
+  | 'weekly'
+  | 'monthly'
+  | 'athlete_summary'
+  | 'coach_summary'
+  | 'department_summary';
+
+export interface AIInsightReport {
+  id: string;
+  team_id: string;
+  generated_at: string;
+  summary_text: string;
+  data_window_start: string;
+  data_window_end: string;
+  report_type: AIInsightReportType;
+  title: string;
+  target_id?: string; // athlete_id, coach_id, or department ID
+  metrics?: {
+    watchCount?: number;
+    highRiskCount?: number;
+    avgSleep?: number;
+    avgSoreness?: number;
+    completionRate?: number;
+  };
+}
+
+export type AIAssistantRole = 'athlete' | 'coach' | 'admin';
+
+export interface ChatMessage {
+  id: string;
+  sender: 'user' | 'ai';
+  text: string;
+  timestamp: string;
+  suggestedQuestions?: string[];
+  contextUsed?: string[];
+}
+
