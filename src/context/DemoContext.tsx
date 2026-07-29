@@ -9,12 +9,18 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { getInitialDemoState } from '../lib/demo-data';
 import { calculateRiskScore, toRiskFlag } from '../lib/risk-scoring';
 import {
+  AIInsight,
+  AthleteProfile,
   CheckIn,
   CoachObservation,
   PhysioNote,
   RiskFlag,
+  Scholarship,
+  TaskStatus,
   Team,
   TeamMembership,
+  Tournament,
+  TrainingTask,
   User,
   UserRole,
 } from '../types';
@@ -28,6 +34,11 @@ interface DemoContextType {
   observations: CoachObservation[];
   physioNotes: PhysioNote[];
   riskFlags: RiskFlag[];
+  tasks: TrainingTask[];
+  scholarships: Scholarship[];
+  tournaments: Tournament[];
+  aiInsights: AIInsight[];
+  profiles: AthleteProfile[];
   activeUser: User;
   activeRole: UserRole;
   switchUser: (userId: string) => void;
@@ -35,6 +46,11 @@ interface DemoContextType {
   addObservation: (obs: Omit<CoachObservation, 'id' | 'created_at'>) => void;
   addPhysioNote: (note: Omit<PhysioNote, 'id' | 'created_at'>) => void;
   reassignAthleteCoach: (athleteId: string, newCoachId: string | null) => void;
+  addTask: (task: Omit<TrainingTask, 'id' | 'status'>) => void;
+  updateTaskStatus: (taskId: string, status: TaskStatus, proofUrl?: string, proofNote?: string) => void;
+  toggleScholarshipApplication: (scholarshipId: string) => void;
+  toggleTournamentRegistration: (tournamentId: string) => void;
+  getAthleteProfile: (userId: string) => AthleteProfile | undefined;
   resetDemoData: () => void;
   getAthleteRiskSummary: (athleteId: string) => {
     athlete: User;
@@ -70,6 +86,19 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     initialState.physioNotes
   );
   const [riskFlags, setRiskFlags] = useState<RiskFlag[]>(initialState.riskFlags);
+  const [tasks, setTasks] = useState<TrainingTask[]>(initialState.tasks || []);
+  const [scholarships, setScholarships] = useState<Scholarship[]>(
+    initialState.scholarships || []
+  );
+  const [tournaments, setTournaments] = useState<Tournament[]>(
+    initialState.tournaments || []
+  );
+  const [aiInsights, setAiInsights] = useState<AIInsight[]>(
+    initialState.aiInsights || []
+  );
+  const [profiles, setProfiles] = useState<AthleteProfile[]>(
+    initialState.profiles || []
+  );
 
   // Default active user is Coach Marcus Vance (id: '00000000-0000-4000-8000-000000000002')
   const [activeUserId, setActiveUserId] = useState<string>(
@@ -90,6 +119,11 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
           setObservations(parsed.observations);
           setPhysioNotes(parsed.physioNotes);
           setRiskFlags(parsed.riskFlags);
+          if (parsed.tasks) setTasks(parsed.tasks);
+          if (parsed.scholarships) setScholarships(parsed.scholarships);
+          if (parsed.tournaments) setTournaments(parsed.tournaments);
+          if (parsed.aiInsights) setAiInsights(parsed.aiInsights);
+          if (parsed.profiles) setProfiles(parsed.profiles);
           if (parsed.activeUserId) {
             setActiveUserId(parsed.activeUserId);
           }
@@ -113,6 +147,11 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
           observations,
           physioNotes,
           riskFlags,
+          tasks,
+          scholarships,
+          tournaments,
+          aiInsights,
+          profiles,
           activeUserId,
         })
       );
@@ -127,6 +166,11 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     observations,
     physioNotes,
     riskFlags,
+    tasks,
+    scholarships,
+    tournaments,
+    aiInsights,
+    profiles,
     activeUserId,
   ]);
 
@@ -297,6 +341,56 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     };
   };
 
+  const addTask = (newTaskData: Omit<TrainingTask, 'id' | 'status'>) => {
+    const newTask: TrainingTask = {
+      ...newTaskData,
+      id: `task-${Date.now()}`,
+      status: 'Pending',
+    };
+    setTasks((prev) => [newTask, ...prev]);
+  };
+
+  const updateTaskStatus = (
+    taskId: string,
+    status: TaskStatus,
+    proofUrl?: string,
+    proofNote?: string
+  ) => {
+    setTasks((prev) =>
+      prev.map((t) => {
+        if (t.id === taskId) {
+          return {
+            ...t,
+            status,
+            proof_url: proofUrl || t.proof_url,
+            proof_note: proofNote || t.proof_note,
+            completed_at:
+              status === 'Completed' ? new Date().toISOString() : t.completed_at,
+          };
+        }
+        return t;
+      })
+    );
+  };
+
+  const toggleScholarshipApplication = (scholarshipId: string) => {
+    setScholarships((prev) =>
+      prev.map((s) => (s.id === scholarshipId ? { ...s, applied: !s.applied } : s))
+    );
+  };
+
+  const toggleTournamentRegistration = (tournamentId: string) => {
+    setTournaments((prev) =>
+      prev.map((t) =>
+        t.id === tournamentId ? { ...t, registered: !t.registered } : t
+      )
+    );
+  };
+
+  const getAthleteProfile = (userId: string) => {
+    return profiles.find((p) => p.user_id === userId);
+  };
+
   return (
     <DemoContext.Provider
       value={{
@@ -308,6 +402,11 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         observations,
         physioNotes,
         riskFlags,
+        tasks,
+        scholarships,
+        tournaments,
+        aiInsights,
+        profiles,
         activeUser,
         activeRole,
         switchUser,
@@ -315,6 +414,11 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         addObservation,
         addPhysioNote,
         reassignAthleteCoach,
+        addTask,
+        updateTaskStatus,
+        toggleScholarshipApplication,
+        toggleTournamentRegistration,
+        getAthleteProfile,
         resetDemoData,
         getAthleteRiskSummary,
       }}

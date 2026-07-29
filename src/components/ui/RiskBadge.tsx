@@ -1,6 +1,6 @@
 // =============================================================================
 // Athlete Risk Intelligence Platform
-// RiskBadge Component — Glowing indicator for Low / Watch / High risk
+// RiskBadge Component — High-contrast indicator for White & Dark UI
 // =============================================================================
 
 import React from 'react';
@@ -37,27 +37,27 @@ export function RiskBadge({
   const styleConfig = {
     low: {
       label: 'LOW RISK',
-      bg: 'bg-emerald-950/60 text-emerald-400 border-emerald-700/50',
-      glow: 'shadow-[0_0_12px_rgba(16,185,129,0.25)]',
-      icon: <CheckCircle2 size={iconSizes} className="text-emerald-400" />,
+      bg: 'bg-emerald-100/90 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-700/50',
+      glow: 'shadow-sm dark:shadow-[0_0_12px_rgba(16,185,129,0.25)]',
+      icon: <CheckCircle2 size={iconSizes} className="text-emerald-600 dark:text-emerald-400" />,
     },
     watch: {
       label: 'WATCH RISK',
-      bg: 'bg-amber-950/70 text-amber-300 border-amber-600/60',
-      glow: 'shadow-[0_0_15px_rgba(245,158,11,0.35)] animate-pulse',
-      icon: <AlertTriangle size={iconSizes} className="text-amber-400" />,
+      bg: 'bg-amber-100/90 text-amber-800 border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-600/60',
+      glow: 'shadow-sm dark:shadow-[0_0_15px_rgba(245,158,11,0.35)] animate-pulse',
+      icon: <AlertTriangle size={iconSizes} className="text-amber-600 dark:text-amber-400" />,
     },
     high: {
       label: 'HIGH RISK',
-      bg: 'bg-rose-950/80 text-rose-300 border-rose-500/70',
-      glow: 'shadow-[0_0_20px_rgba(244,63,94,0.45)] animate-pulse',
-      icon: <Flame size={iconSizes} className="text-rose-400" />,
+      bg: 'bg-rose-100/90 text-rose-800 border-rose-300 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-500/70',
+      glow: 'shadow-sm dark:shadow-[0_0_20px_rgba(244,63,94,0.45)] animate-pulse',
+      icon: <Flame size={iconSizes} className="text-rose-600 dark:text-rose-400" />,
     },
   }[normLevel] || {
     label: 'LOW RISK',
-    bg: 'bg-emerald-950/60 text-emerald-400 border-emerald-700/50',
-    glow: 'shadow-[0_0_12px_rgba(16,185,129,0.25)]',
-    icon: <CheckCircle2 size={iconSizes} className="text-emerald-400" />,
+    bg: 'bg-emerald-100/90 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-700/50',
+    glow: 'shadow-sm dark:shadow-[0_0_12px_rgba(16,185,129,0.25)]',
+    icon: <CheckCircle2 size={iconSizes} className="text-emerald-600 dark:text-emerald-400" />,
   };
 
   return (

@@ -2,7 +2,7 @@
 
 // =============================================================================
 // Athlete Risk Intelligence Platform
-// ObservationModal — Coach observation quick logger
+// ObservationModal — White & Dark UI support, Coach observation quick logger
 // =============================================================================
 
 import React, { useState } from 'react';
@@ -62,30 +62,30 @@ export function ObservationModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl ring-1 ring-white/10">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-slate-950/80 p-4 backdrop-blur-sm transition-colors">
+      <div className="relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 transition-all">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-2">
-            <Eye className="text-blue-400" size={22} />
+            <Eye className="text-blue-600 dark:text-blue-400" size={22} />
             <div>
-              <h3 className="text-lg font-bold text-white">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                 Log Coach Observation
               </h3>
-              <p className="text-xs text-slate-400">
-                Athlete: <span className="font-semibold text-blue-300">{athlete.name}</span>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Athlete: <span className="font-semibold text-blue-600 dark:text-blue-300">{athlete.name}</span>
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-white transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
         {errors.length > 0 && (
-          <div className="mt-4 rounded-xl border border-rose-800/60 bg-rose-950/40 p-3 text-xs text-rose-300">
+          <div className="mt-4 rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs text-rose-800 dark:border-rose-800/60 dark:bg-rose-950/40 dark:text-rose-300">
             <div className="flex items-center gap-1.5 font-bold">
               <AlertCircle size={15} />
               <span>Please check your entry:</span>
@@ -100,7 +100,7 @@ export function ObservationModal({
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
               Observation Notes
             </label>
             <textarea
@@ -108,18 +108,18 @@ export function ObservationModal({
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="e.g. Maya showed slight limp after 200m block starts. Recommended physio evaluation..."
-              className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 p-3.5 text-sm text-white placeholder-slate-600 focus:border-blue-500 focus:outline-none"
+              className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white p-3.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder-slate-600"
             />
-            <p className="mt-1.5 text-[11px] text-slate-400">
+            <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
               Observations are visible to Coaches, Physios, and Department Admins.
             </p>
           </div>
 
-          <div className="flex items-center justify-end gap-3 border-t border-slate-800 pt-4">
+          <div className="flex items-center justify-end gap-3 border-t border-slate-200 dark:border-slate-800 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800"
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors"
             >
               Cancel
             </button>

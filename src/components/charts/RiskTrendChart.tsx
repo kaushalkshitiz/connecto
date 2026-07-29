@@ -2,7 +2,7 @@
 
 // =============================================================================
 // Athlete Risk Intelligence Platform
-// RiskTrendChart — Responsive SVG Chart for 7-Day Sleep & Soreness
+// RiskTrendChart — Responsive SVG Chart for 7-Day Sleep & Soreness (White & Dark)
 // =============================================================================
 
 import React from 'react';
@@ -21,7 +21,7 @@ export function RiskTrendChart({ checkIns }: RiskTrendChartProps) {
 
   if (sorted.length === 0) {
     return (
-      <div className="flex h-56 w-full items-center justify-center rounded-2xl border border-slate-800 bg-slate-950/40 text-sm text-slate-500">
+      <div className="flex h-56 w-full items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-400">
         No recent check-in data available for trend chart.
       </div>
     );
@@ -67,22 +67,22 @@ export function RiskTrendChart({ checkIns }: RiskTrendChartProps) {
     .join(' ');
 
   return (
-    <div className="rounded-2xl border border-slate-800/80 bg-slate-950/60 p-5 shadow-inner">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-950/60 dark:shadow-inner transition-all">
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
         <div>
-          <h4 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+          <h4 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-slate-300">
             7-Day Load & Recovery Trend
           </h4>
-          <p className="text-xs text-slate-400">
-            Dashed red lines indicate critical <span className="font-semibold text-rose-400">Watch thresholds</span> (Sleep &lt; 6h, Soreness &ge; 4)
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Dashed lines indicate critical <span className="font-semibold text-rose-600 dark:text-rose-400">Watch thresholds</span> (Sleep &lt; 6h, Soreness &ge; 4)
           </p>
         </div>
         <div className="flex items-center gap-4 text-xs font-semibold">
-          <div className="flex items-center gap-1.5 text-blue-400">
+          <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
             <Moon size={14} />
             <span>Sleep (hrs)</span>
           </div>
-          <div className="flex items-center gap-1.5 text-amber-400">
+          <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
             <Activity size={14} />
             <span>Soreness (1-5)</span>
           </div>
@@ -100,7 +100,7 @@ export function RiskTrendChart({ checkIns }: RiskTrendChartProps) {
             y1={paddingY}
             x2={width - paddingX}
             y2={paddingY}
-            stroke="#1e293b"
+            className="stroke-slate-200 dark:stroke-slate-800"
             strokeWidth="1"
           />
           <line
@@ -108,7 +108,7 @@ export function RiskTrendChart({ checkIns }: RiskTrendChartProps) {
             y1={height - paddingY}
             x2={width - paddingX}
             y2={height - paddingY}
-            stroke="#1e293b"
+            className="stroke-slate-200 dark:stroke-slate-800"
             strokeWidth="1"
           />
 
@@ -183,7 +183,7 @@ export function RiskTrendChart({ checkIns }: RiskTrendChartProps) {
               x={getX(idx)}
               y={height - 5}
               textAnchor="middle"
-              className="fill-slate-500 text-[10px] font-medium"
+              className="fill-slate-500 dark:fill-slate-400 text-[10px] font-medium"
             >
               {ci.date.slice(5)}
             </text>

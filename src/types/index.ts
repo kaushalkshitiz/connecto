@@ -116,3 +116,75 @@ export interface RiskCalculationResult {
   sevenDayAvgSoreness: number | null;
   daysSinceLastCheckIn: number;
 }
+
+// =============================================================================
+// AI Athlete Growth Platform — Tasks, Scholarships, Tournaments, and Insights
+// =============================================================================
+
+export type TaskDifficulty = 'Low' | 'Medium' | 'High';
+export type TaskStatus = 'Pending' | 'In Progress' | 'Completed';
+
+export interface TrainingTask {
+  id: string;
+  athlete_id: string;
+  coach_id: string;
+  title: string;
+  instructions: string;
+  deadline: string; // YYYY-MM-DD
+  difficulty: TaskDifficulty;
+  status: TaskStatus;
+  proof_url?: string;
+  proof_note?: string;
+  completed_at?: string;
+  category: string; // e.g., 'Sprint Drills', 'Strength', 'Recovery', 'Video Analysis'
+}
+
+export interface Scholarship {
+  id: string;
+  name: string;
+  provider: string;
+  amount: string;
+  deadline: string;
+  category: string;
+  eligibility: string;
+  description: string;
+  applied?: boolean;
+}
+
+export interface Tournament {
+  id: string;
+  name: string;
+  sport: string;
+  location: string;
+  date: string;
+  registration_status: 'Open' | 'Closing Soon' | 'Registered' | 'Closed';
+  details: string;
+  registered?: boolean;
+}
+
+export interface AIInsight {
+  id: string;
+  athlete_id: string;
+  title: string;
+  description: string;
+  confidence: number; // Percentage 0-100 (e.g. 94)
+  priority: 'High' | 'Medium' | 'Low';
+  suggested_actions: {
+    label: string;
+    action_type: 'adjust_load' | 'schedule_pt' | 'view_drills' | 'rest';
+  }[];
+  created_at: string;
+}
+
+export interface AthleteProfile {
+  user_id: string;
+  photo_url: string;
+  sport: string;
+  specialty: string;
+  academic_year: string;
+  gpa: string;
+  achievements: string[];
+  bio: string;
+  training_streak: number; // e.g. 14 days
+}
+
