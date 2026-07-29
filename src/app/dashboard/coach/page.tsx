@@ -1,32 +1,48 @@
 'use client';
 
 // =============================================================================
-// Athlete Risk Intelligence Platform
-// Coach Roster Dashboard — Real-time risk badges, filters, and trend overview
+// AI Athlete Growth Platform
+// Coach Dashboard (/dashboard/coach) — Roster, AI Insights, Task Assignment & Alerts
 // =============================================================================
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useDemo } from '../../../context/DemoContext';
 import { RiskBadge } from '../../../components/ui/RiskBadge';
-import { RiskLevel } from '../../../types';
+import { AIInsightCard } from '../../../components/ui/AIInsightCard';
+import { TaskAssignModal } from '../../../components/forms/TaskAssignModal';
+import { RiskLevel, TrainingTask } from '../../../types';
 import {
   Activity,
   AlertTriangle,
   ArrowRight,
+  Calendar,
+  CheckCircle2,
+  CheckSquare,
   Clock,
   Filter,
   Flame,
   Moon,
+  Plus,
   Search,
+  Sparkles,
   Users,
 } from 'lucide-react';
 
 export default function CoachDashboardPage() {
-  const { users, memberships, team, riskFlags, checkIns } = useDemo();
+  const {
+    users,
+    memberships,
+    team,
+    riskFlags,
+    checkIns,
+    tasks,
+    aiInsights,
+  } = useDemo();
 
   const [filterLevel, setFilterLevel] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 
   // Find athletes
   const athleteUsers = users.filter((u) =>
@@ -49,287 +65,338 @@ export default function CoachDashboardPage() {
 
     const latest = athleteCheckIns[0] || null;
 
-    let daysSince = 999;
-    if (latest) {
-      const today = new Date().toISOString().slice(0, 10);
-      const d1 = new Date(latest.date + 'T00:00:00Z');
-      const d2 = new Date(today + 'T00:00:00Z');
-      daysSince = Math.floor(
-        Math.abs(d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)
-      );
-    }
-
-    // Compute 7-day sleep avg
-    const recent7 = athleteCheckIns.slice(0, 7);
-    const avgSleep =
-      recent7.length > 0
-        ? Number(
-            (
-              recent7.reduce((s, ci) => s + Number(ci.sleep_hours), 0) /
-              recent7.length
-            ).toFixed(1)
-          )
-        : null;
-
-    const avgSoreness =
-      recent7.length > 0
-        ? Number(
-            (
-              recent7.reduce((s, ci) => s + Number(ci.soreness), 0) /
-              recent7.length
-            ).toFixed(1)
-          )
-        : null;
-
     return {
       athlete,
       flag,
-      latestCheckIn: latest,
-      daysSince,
-      avgSleep,
-      avgSoreness,
+      latest,
     };
   });
 
-  // Filter roster
-  const filteredRoster = rosterWithRisk.filter((item) => {
-    const matchesLevel =
-      filterLevel === 'all' ||
-      item.flag.level.toLowerCase() === filterLevel.toLowerCase();
+  const highRiskCount = rosterWithRisk.filter(
+    (r) => r.flag.level === 'high'
+  ).length;
 
+  const watchRiskCount = rosterWithRisk.filter(
+    (r) => r.flag.level === 'watch'
+  ).length;
+
+  const completedTasksWithProof = tasks.filter(
+    (t) => t.status === 'Completed' && t.proof_note
+  );
+
+  const filteredRoster = rosterWithRisk.filter((item) => {
+    const matchesFilter =
+      filterLevel === 'all' || item.flag.level === filterLevel;
     const matchesSearch =
-      searchQuery.trim() === '' ||
       item.athlete.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.athlete.email.toLowerCase().includes(searchQuery.toLowerCase());
-
-    return matchesLevel && matchesSearch;
+    return matchesFilter && matchesSearch;
   });
 
-  const highCount = rosterWithRisk.filter((i) => i.flag.level === 'high').length;
-  const watchCount = rosterWithRisk.filter((i) => i.flag.level === 'watch').length;
-
   return (
-    <div className="space-y-8 pb-12">
-      {/* Top Title & Roster Alert Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="rounded-lg bg-blue-950/80 p-2 text-blue-400 border border-blue-800/50">
-              <Users size={20} />
+    <div className="space-y-8 pb-12 transition-colors duration-300">
+      {/* 1. Top Header Banner with Assign Task Button */}
+      <div className="flex flex-wrap items-center justify-between gap-6 rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-blue-50/40 p-6 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 sm:p-8">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-900 dark:border-blue-800 dark:bg-slate-800 dark:text-slate-200">
+              <span>Coach Command Center</span>
             </span>
-            <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
-              Coach Roster Intelligence
-            </h1>
+            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+              NCAA Track &amp; Field Roster
+            </span>
           </div>
-          <p className="mt-1 text-sm text-slate-400">
-            Real-time rule-based injury &amp; dropout risk flags for{' '}
-            <span className="font-semibold text-slate-200">{team.name}</span>
+          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+            {team.name} • Training &amp; Load Management
+          </h1>
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+            Real-time physiological risk monitoring, workout assignments, and NCAA scholarship tracking.
           </p>
         </div>
 
-        {/* Actionable summary badge */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 rounded-xl border border-rose-900/50 bg-rose-950/40 px-4 py-2 text-sm font-bold text-rose-300">
-            <Flame size={18} className="text-rose-400 animate-pulse" />
-            <span>{highCount} High Risk</span>
-          </div>
-          <div className="flex items-center gap-2 rounded-xl border border-amber-900/50 bg-amber-950/40 px-4 py-2 text-sm font-bold text-amber-300">
-            <AlertTriangle size={18} className="text-amber-400" />
-            <span>{watchCount} Watch</span>
-          </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setIsAssignModalOpen(true)}
+            className="inline-flex items-center gap-2 rounded-2xl bg-blue-900 px-6 py-3.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-blue-800 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+          >
+            <Plus size={18} />
+            <span>Assign New Task to Athlete</span>
+          </button>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400">
-            <Filter size={14} />
-            <span>Risk Level:</span>
+      {/* 2. Overview Cards & Team Analytics */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              Total Roster
+            </span>
+            <Users size={16} className="text-blue-600 dark:text-blue-400" />
+          </div>
+          <p className="mt-2 text-2xl font-black text-slate-900 dark:text-white">
+            {athleteUsers.length} Athletes
+          </p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Active NCAA division squad
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-5 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/40">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400">
+              High Risk Alerts
+            </span>
+            <AlertTriangle size={16} className="text-rose-600 dark:text-rose-400" />
+          </div>
+          <p className="mt-2 text-2xl font-black text-rose-800 dark:text-rose-300">
+            {highRiskCount} Athlete(s)
+          </p>
+          <p className="mt-1 text-xs font-semibold text-rose-700 dark:text-rose-400">
+            Requires immediate load adjustment
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/40">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+              Warning (Watch)
+            </span>
+            <Clock size={16} className="text-amber-600 dark:text-amber-400" />
+          </div>
+          <p className="mt-2 text-2xl font-black text-amber-800 dark:text-amber-300">
+            {watchRiskCount} Athlete(s)
+          </p>
+          <p className="mt-1 text-xs font-semibold text-amber-700 dark:text-amber-400">
+            Monitor sleep &amp; soreness trends
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              Task Proof Reviews
+            </span>
+            <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <p className="mt-2 text-2xl font-black text-slate-900 dark:text-white">
+            {completedTasksWithProof.length} Completed
+          </p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            With attached execution proof
+          </p>
+        </div>
+      </div>
+
+      {/* 3. MOST IMPORTANT SECTION: AI RECOMMENDATIONS */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
+              AI Coach Intelligence &amp; Load Recommendations
+            </h2>
+          </div>
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Synthesized from daily athlete readiness &amp; physio logs
           </span>
-          {[
-            { id: 'all', label: 'All Athletes' },
-            { id: 'high', label: 'High Risk' },
-            { id: 'watch', label: 'Watch Risk' },
-            { id: 'low', label: 'Low Risk' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setFilterLevel(tab.id)}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
-                filterLevel === tab.id
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                  : 'bg-slate-950 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-              }`}
-            >
-              {tab.label}
-            </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {aiInsights.slice(0, 2).map((insight) => (
+            <AIInsightCard key={insight.id} insight={insight} />
           ))}
         </div>
-
-        <div className="relative w-full sm:w-72">
-          <Search
-            size={16}
-            className="absolute left-3.5 top-3 text-slate-500"
-          />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search athlete by name..."
-            className="w-full rounded-xl border border-slate-800 bg-slate-950 py-2 pl-9 pr-4 text-sm text-white placeholder-slate-600 focus:border-blue-500 focus:outline-none"
-          />
-        </div>
       </div>
 
-      {/* Roster Table */}
-      <div className="overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/60 shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-800 bg-slate-950/80 text-xs font-bold uppercase tracking-wider text-slate-400">
-                <th className="py-4 pl-6 pr-4">Athlete Name</th>
-                <th className="py-4 px-4">Current Risk Level</th>
-                <th className="py-4 px-4">7-Day Sleep Avg</th>
-                <th className="py-4 px-4">7-Day Soreness Avg</th>
-                <th className="py-4 px-4">Last Check-In</th>
-                <th className="py-4 px-4">Flag Reason (Explainable)</th>
-                <th className="py-4 pl-4 pr-6 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60 text-sm">
-              {filteredRoster.map((item) => (
-                <tr
-                  key={item.athlete.id}
-                  className="transition-colors hover:bg-slate-800/40"
+      {/* 4. Pending Task Reviews Widget */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
+          <div className="flex items-center gap-2">
+            <CheckSquare className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              Recent Training Task Submissions ({completedTasksWithProof.length})
+            </h3>
+          </div>
+          <Link
+            href="/dashboard/tasks"
+            className="text-xs font-bold text-blue-900 hover:underline dark:text-emerald-400"
+          >
+            Manage All Tasks &rarr;
+          </Link>
+        </div>
+
+        {completedTasksWithProof.length === 0 ? (
+          <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
+            No completed tasks with proof submitted yet today.
+          </p>
+        ) : (
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+            {completedTasksWithProof.slice(0, 4).map((task) => {
+              const athlete = users.find((u) => u.id === task.athlete_id);
+              return (
+                <div
+                  key={task.id}
+                  className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-950"
                 >
-                  <td className="py-4 pl-6 pr-4 font-bold text-white">
-                    <Link
-                      href={`/dashboard/coach/${item.athlete.id}`}
-                      className="flex items-center gap-2 hover:text-blue-400"
-                    >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-xs font-black text-white">
-                        {item.athlete.name
-                          .split(' ')
-                          .map((n) => n[0])
-                          .join('')}
-                      </div>
-                      <div>
-                        <p>{item.athlete.name}</p>
-                        <p className="text-xs font-normal text-slate-500">
-                          {item.athlete.email}
-                        </p>
-                      </div>
-                    </Link>
-                  </td>
-
-                  <td className="py-4 px-4">
-                    <RiskBadge level={item.flag.level} size="sm" />
-                  </td>
-
-                  <td className="py-4 px-4">
-                    {item.avgSleep !== null ? (
-                      <div className="flex items-center gap-1.5 font-semibold">
-                        <Moon
-                          size={15}
-                          className={
-                            item.avgSleep < 6.0
-                              ? 'text-rose-400'
-                              : 'text-blue-400'
-                          }
-                        />
-                        <span
-                          className={
-                            item.avgSleep < 6.0
-                              ? 'text-rose-400 font-bold'
-                              : 'text-slate-200'
-                          }
-                        >
-                          {item.avgSleep} hrs
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-slate-500">N/A</span>
-                    )}
-                  </td>
-
-                  <td className="py-4 px-4">
-                    {item.avgSoreness !== null ? (
-                      <div className="flex items-center gap-1.5 font-semibold">
-                        <Activity
-                          size={15}
-                          className={
-                            item.avgSoreness >= 4.0
-                              ? 'text-amber-400'
-                              : 'text-emerald-400'
-                          }
-                        />
-                        <span
-                          className={
-                            item.avgSoreness >= 4.0
-                              ? 'text-amber-400 font-bold'
-                              : 'text-slate-200'
-                          }
-                        >
-                          {item.avgSoreness} / 5
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-slate-500">N/A</span>
-                    )}
-                  </td>
-
-                  <td className="py-4 px-4">
-                    <div className="flex items-center gap-1.5 text-slate-300">
-                      <Clock size={15} className="text-slate-500" />
-                      {item.daysSince === 0 ? (
-                        <span className="font-semibold text-emerald-400">
-                          Today
-                        </span>
-                      ) : item.daysSince === 1 ? (
-                        <span>Yesterday</span>
-                      ) : item.daysSince >= 4 ? (
-                        <span className="font-bold text-amber-400">
-                          {item.daysSince} days ago (Watch)
-                        </span>
-                      ) : (
-                        <span>{item.daysSince} days ago</span>
-                      )}
-                    </div>
-                  </td>
-
-                  <td className="py-4 px-4 max-w-xs">
-                    <p className="line-clamp-2 text-xs text-slate-300">
-                      {item.flag.reason}
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">
+                      {athlete?.name || 'Athlete'}
+                    </span>
+                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      {task.title}
                     </p>
-                  </td>
+                    <p className="mt-0.5 text-[11px] text-emerald-700 dark:text-emerald-400">
+                      &ldquo;{task.proof_note}&rdquo;
+                    </p>
+                  </div>
+                  <span className="rounded-lg bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                    Completed
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
-                  <td className="py-4 pl-4 pr-6 text-right">
-                    <Link
-                      href={`/dashboard/coach/${item.athlete.id}`}
-                      className="inline-flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-800/80 px-3 py-1.5 text-xs font-bold text-white transition-all hover:border-blue-500 hover:bg-blue-600"
-                    >
-                      <span>Detail</span>
-                      <ArrowRight size={13} />
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+      {/* 5. Athlete Roster & Performance Alerts Table */}
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
+            Roster Readiness &amp; Early Warning Monitor
+          </h2>
 
-              {filteredRoster.length === 0 && (
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900">
+              <button
+                onClick={() => setFilterLevel('all')}
+                className={`rounded-lg px-3 py-1 text-xs font-bold transition-colors ${
+                  filterLevel === 'all'
+                    ? 'bg-blue-900 text-white dark:bg-emerald-600'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                }`}
+              >
+                All ({rosterWithRisk.length})
+              </button>
+              <button
+                onClick={() => setFilterLevel('high')}
+                className={`rounded-lg px-3 py-1 text-xs font-bold transition-colors ${
+                  filterLevel === 'high'
+                    ? 'bg-rose-600 text-white'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                }`}
+              >
+                High Risk ({highRiskCount})
+              </button>
+              <button
+                onClick={() => setFilterLevel('watch')}
+                className={`rounded-lg px-3 py-1 text-xs font-bold transition-colors ${
+                  filterLevel === 'watch'
+                    ? 'bg-amber-600 text-white'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                }`}
+              >
+                Watch ({watchRiskCount})
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search athlete..."
+                className="rounded-xl border border-slate-300 bg-white py-1.5 pl-8 pr-3 text-xs text-slate-900 placeholder-slate-400 focus:border-emerald-600 focus:outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-slate-200 bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="py-12 text-center text-sm text-slate-500"
-                  >
-                    No athletes found matching your selected risk filter or search query.
-                  </td>
+                  <th className="px-5 py-3.5">Athlete</th>
+                  <th className="px-5 py-3.5">Risk Status</th>
+                  <th className="px-5 py-3.5">Assigned Tasks</th>
+                  <th className="px-5 py-3.5">Last Check-In</th>
+                  <th className="px-5 py-3.5">Primary Reason / Trigger</th>
+                  <th className="px-5 py-3.5 text-right">Actions</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {filteredRoster.map(({ athlete, flag, latest }) => {
+                  const athleteTasks = tasks.filter(
+                    (t) => t.athlete_id === athlete.id
+                  );
+                  const completedCount = athleteTasks.filter(
+                    (t) => t.status === 'Completed'
+                  ).length;
+
+                  return (
+                    <tr
+                      key={athlete.id}
+                      className="transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/40"
+                    >
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-900 text-xs font-bold text-white dark:bg-emerald-600">
+                            {athlete.name.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-900 dark:text-white">
+                              {athlete.name}
+                            </div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                              {athlete.email}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <RiskBadge level={flag.level} size="sm" />
+                      </td>
+                      <td className="px-5 py-4 font-semibold text-slate-700 dark:text-slate-300">
+                        {athleteTasks.length > 0
+                          ? `${completedCount}/${athleteTasks.length} Completed`
+                          : 'No tasks'}
+                      </td>
+                      <td className="px-5 py-4 text-slate-600 dark:text-slate-400">
+                        {latest ? (
+                          <span>{new Date(latest.date).toLocaleDateString()}</span>
+                        ) : (
+                          <span className="text-slate-400 italic">No log yet</span>
+                        )}
+                      </td>
+                      <td className="max-w-xs truncate px-5 py-4 text-slate-600 dark:text-slate-400">
+                        {flag.reason}
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <Link
+                          href={`/dashboard/coach/athlete/${athlete.id}`}
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 font-bold text-blue-900 hover:bg-slate-50 dark:border-slate-700 dark:text-emerald-400 dark:hover:bg-slate-800"
+                        >
+                          <span>Analyze</span>
+                          <ArrowRight size={13} />
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
+
+      {/* Assign Task Modal */}
+      <TaskAssignModal
+        isOpen={isAssignModalOpen}
+        onClose={() => setIsAssignModalOpen(false)}
+      />
     </div>
   );
 }

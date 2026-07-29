@@ -2,7 +2,7 @@
 
 // =============================================================================
 // Athlete Risk Intelligence Platform
-// PhysioModal — Injury and treatment logger with status tags
+// PhysioModal — White & Dark UI support, Injury and treatment logger
 // =============================================================================
 
 import React, { useState } from 'react';
@@ -69,30 +69,30 @@ export function PhysioModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl ring-1 ring-white/10">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-slate-950/80 p-4 backdrop-blur-sm transition-colors">
+      <div className="relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 transition-all">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-2">
-            <HeartPulse className="text-teal-400" size={22} />
+            <HeartPulse className="text-teal-600 dark:text-teal-400" size={22} />
             <div>
-              <h3 className="text-lg font-bold text-white">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                 Log Physio Treatment / Injury Note
               </h3>
-              <p className="text-xs text-slate-400">
-                Athlete: <span className="font-semibold text-teal-300">{athlete.name}</span>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Athlete: <span className="font-semibold text-teal-600 dark:text-teal-300">{athlete.name}</span>
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-white transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
         {errors.length > 0 && (
-          <div className="mt-4 rounded-xl border border-rose-800/60 bg-rose-950/40 p-3 text-xs text-rose-300">
+          <div className="mt-4 rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs text-rose-800 dark:border-rose-800/60 dark:bg-rose-950/40 dark:text-rose-300">
             <div className="flex items-center gap-1.5 font-bold">
               <AlertCircle size={15} />
               <span>Please check your entry:</span>
@@ -108,7 +108,7 @@ export function PhysioModal({
         <form onSubmit={handleSubmit} className="mt-5 space-y-5">
           {/* Status Tag Picker */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
               Injury / Medical Status Tag
             </label>
             <div className="mt-2 grid grid-cols-3 gap-3">
@@ -119,8 +119,8 @@ export function PhysioModal({
                   desc: 'Triggers High Risk if combined with Watch conditions',
                   colorClasses:
                     status === 'active'
-                      ? 'border-rose-500 bg-rose-950/80 text-rose-300 ring-2 ring-rose-500/50'
-                      : 'border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700',
+                      ? 'border-rose-300 bg-rose-100 text-rose-800 ring-2 ring-rose-400 dark:border-rose-500 dark:bg-rose-950/80 dark:text-rose-300 dark:ring-rose-500/50'
+                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-400 dark:hover:border-slate-700',
                 },
                 {
                   id: 'recovering',
@@ -128,8 +128,8 @@ export function PhysioModal({
                   desc: 'Rehab / therapy progress normal',
                   colorClasses:
                     status === 'recovering'
-                      ? 'border-amber-500 bg-amber-950/80 text-amber-300 ring-2 ring-amber-500/50'
-                      : 'border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700',
+                      ? 'border-amber-300 bg-amber-100 text-amber-800 ring-2 ring-amber-400 dark:border-amber-500 dark:bg-amber-950/80 dark:text-amber-300 dark:ring-amber-500/50'
+                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-400 dark:hover:border-slate-700',
                 },
                 {
                   id: 'cleared',
@@ -137,8 +137,8 @@ export function PhysioModal({
                   desc: 'Full return to training',
                   colorClasses:
                     status === 'cleared'
-                      ? 'border-emerald-500 bg-emerald-950/80 text-emerald-300 ring-2 ring-emerald-500/50'
-                      : 'border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700',
+                      ? 'border-emerald-300 bg-emerald-100 text-emerald-800 ring-2 ring-emerald-400 dark:border-emerald-500 dark:bg-emerald-950/80 dark:text-emerald-300 dark:ring-emerald-500/50'
+                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-400 dark:hover:border-slate-700',
                 },
               ].map((item) => (
                 <button
@@ -154,7 +154,7 @@ export function PhysioModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
               Clinical Treatment / Rehab Note
             </label>
             <textarea
@@ -162,15 +162,15 @@ export function PhysioModal({
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="e.g. Grade 1 left hamstring strain. Iced and compressed. Restricting high-velocity sprinting..."
-              className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 p-3.5 text-sm text-white placeholder-slate-600 focus:border-teal-500 focus:outline-none"
+              className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white p-3.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder-slate-600"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-3 border-t border-slate-800 pt-4">
+          <div className="flex items-center justify-end gap-3 border-t border-slate-200 dark:border-slate-800 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800"
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors"
             >
               Cancel
             </button>

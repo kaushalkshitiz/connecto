@@ -4,11 +4,16 @@
 // =============================================================================
 
 import {
+  AIInsight,
+  AthleteProfile,
   CheckIn,
   CoachObservation,
   PhysioNote,
+  Scholarship,
   Team,
   TeamMembership,
+  Tournament,
+  TrainingTask,
   User,
 } from '../types';
 import { calculateRiskScore, toRiskFlag } from './risk-scoring';
@@ -281,5 +286,272 @@ export function getInitialDemoState() {
     observations,
     physioNotes,
     riskFlags,
+    tasks: DEMO_TASKS,
+    scholarships: DEMO_SCHOLARSHIPS,
+    tournaments: DEMO_TOURNAMENTS,
+    aiInsights: DEMO_AI_INSIGHTS,
+    profiles: DEMO_PROFILES,
   };
 }
+
+// =============================================================================
+// AI Athlete Growth Platform — Seed Data for Tasks, Scholarships, Tournaments
+// =============================================================================
+
+export const DEMO_TASKS: TrainingTask[] = [
+  {
+    id: 'task-1',
+    athlete_id: '33333333-3333-4333-8333-333333333301', // Maya Lin
+    coach_id: '00000000-0000-4000-8000-000000000002',
+    title: 'Complete 4x100m Relay Hand-off Drill Video Review',
+    instructions:
+      'Watch the slow-motion block starts from Tuesday session. Analyze rear-foot clearance and hand-off timing at 30m mark.',
+    deadline: '2026-07-30',
+    difficulty: 'Medium',
+    status: 'Pending',
+    category: 'Video Analysis',
+  },
+  {
+    id: 'task-2',
+    athlete_id: '33333333-3333-4333-8333-333333333301', // Maya Lin
+    coach_id: '00000000-0000-4000-8000-000000000002',
+    title: 'Post-Workout Ice Bath & Hamstring Compression Session',
+    instructions:
+      'Complete 15-minute cold plunge (10°C) followed by pneumatic compression boots on left hamstring.',
+    deadline: '2026-07-29',
+    difficulty: 'Low',
+    status: 'Completed',
+    proof_url: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400',
+    proof_note: '15 min cold plunge completed after track session.',
+    completed_at: '2026-07-29T10:15:00Z',
+    category: 'Recovery',
+  },
+  {
+    id: 'task-3',
+    athlete_id: '33333333-3333-4333-8333-333333333301', // Maya Lin
+    coach_id: '00000000-0000-4000-8000-000000000002',
+    title: 'Plyometric Box Jump Progress Assessment',
+    instructions:
+      'Perform 3 sets of 5 depth jumps (30-inch box). Focus on sub-250ms ground contact time and upload video proof.',
+    deadline: '2026-07-31',
+    difficulty: 'High',
+    status: 'In Progress',
+    category: 'Strength & Power',
+  },
+  {
+    id: 'task-4',
+    athlete_id: '33333333-3333-4333-8333-333333333302', // Jordan Thorne
+    coach_id: '00000000-0000-4000-8000-000000000003',
+    title: 'Aerobic Threshold 8km Recovery Run',
+    instructions:
+      'Maintain heart rate zone 2 (<145 bpm) on soft turf track. Log Garmin FIT file upon completion.',
+    deadline: '2026-07-30',
+    difficulty: 'Medium',
+    status: 'Pending',
+    category: 'Endurance',
+  },
+  {
+    id: 'task-5',
+    athlete_id: '33333333-3333-4333-8333-333333333306', // Sienna Brooks
+    coach_id: '00000000-0000-4000-8000-000000000003',
+    title: 'Biomechanical Take-off Angle Analysis Video Proof',
+    instructions:
+      'Record 3 full-runup javelin throws from lateral side angle (120fps min) for Coach Rostova review.',
+    deadline: '2026-08-01',
+    difficulty: 'High',
+    status: 'Pending',
+    category: 'Technique',
+  },
+];
+
+export const DEMO_SCHOLARSHIPS: Scholarship[] = [
+  {
+    id: 'sch-1',
+    name: 'NCAA Division I Elite Track & Field Merit Scholarship',
+    provider: 'Stanford Athletics Endowment Fund',
+    amount: '$25,000 / yr',
+    deadline: '2026-08-15',
+    category: 'NCAA Div I',
+    eligibility: 'Top-8 conference finalists in sprints, hurdles, or field events with min 3.3 GPA.',
+    description:
+      'Annual endowed grant supporting high-achieving student-athletes with tuition, training equipment, and international competition travel grants.',
+    applied: true,
+  },
+  {
+    id: 'sch-2',
+    name: 'Arthur Pendelton Student-Athlete Academic Excellence Grant',
+    provider: 'Pac-12 Academic Foundation',
+    amount: '$12,500 / yr',
+    deadline: '2026-09-01',
+    category: 'Merit & Athletic',
+    eligibility: 'Active varsity roster athlete with cumulative GPA >= 3.75 in STEM or Humanities.',
+    description:
+      'Recognizes student-athletes who balance rigorous academic coursework with varsity competition.',
+    applied: false,
+  },
+  {
+    id: 'sch-3',
+    name: 'Nike NextGen Olympic Athlete Development Fellowship',
+    provider: 'Nike Sports Science & Innovation Program',
+    amount: '$18,000 / yr',
+    deadline: '2026-08-30',
+    category: 'Endowed Fellowship',
+    eligibility: 'Collegiate athletes qualifying for USATF National Olympic Trials in short sprints or distance.',
+    description:
+      'Includes sports science lab testing, custom footwear development access, and annual stipend.',
+    applied: false,
+  },
+  {
+    id: 'sch-4',
+    name: 'Global Athletics Leadership & Community Impact Scholarship',
+    provider: 'World Athletics Development Council',
+    amount: '$10,000 / yr',
+    deadline: '2026-10-12',
+    category: 'International',
+    eligibility: 'Athletes demonstrating active leadership in youth sports outreach and mentorship.',
+    description:
+      'Empowers collegiate leaders to host community athletics clinics in underserved school districts.',
+    applied: false,
+  },
+];
+
+export const DEMO_TOURNAMENTS: Tournament[] = [
+  {
+    id: 'tour-1',
+    name: '2026 Pac-12 Outdoor Track & Field Championships',
+    sport: 'Track & Field • Sprints / Distance / Field',
+    location: 'Stanford University (Cobb Track & Angell Field)',
+    date: 'May 14–16, 2026',
+    registration_status: 'Open',
+    details:
+      'Premier conference championship meet qualifying top regional finishers for NCAA West Preliminaries.',
+    registered: true,
+  },
+  {
+    id: 'tour-2',
+    name: 'NCAA Division I West Preliminary Round',
+    sport: 'Track & Field • All NCAA Events',
+    location: 'Hornet Stadium, Sacramento, CA',
+    date: 'May 28–30, 2026',
+    registration_status: 'Registered',
+    details:
+      'Official NCAA regional qualification tournament to determine the 48 finalists advancing to NCAA Outdoors.',
+    registered: true,
+  },
+  {
+    id: 'tour-3',
+    name: 'Stanford Invitational & Multi-Event Open',
+    sport: 'Track & Field • Invitational Sprints & Relays',
+    location: 'Stanford University, Stanford, CA',
+    date: 'Apr 10–11, 2026',
+    registration_status: 'Closed',
+    details:
+      'Annual premier collegiate and professional early-season invitational featuring over 3,000 athletes.',
+    registered: false,
+  },
+  {
+    id: 'tour-4',
+    name: 'USATF National Olympic Trials Showcase',
+    sport: 'Track & Field • Olympic Qualification Trials',
+    location: 'Hayward Field, Eugene, OR',
+    date: 'Jun 18–22, 2026',
+    registration_status: 'Closing Soon',
+    details:
+      'National trials competition selecting the United States Olympic Track & Field team.',
+    registered: false,
+  },
+];
+
+export const DEMO_AI_INSIGHTS: AIInsight[] = [
+  {
+    id: 'aii-1',
+    athlete_id: '33333333-3333-4333-8333-333333333301', // Maya Lin
+    title: 'Recovery Declined: High Hamstring Load & Sleep Deficit',
+    description:
+      'Your recovery has declined over the past week because your average sleep dropped from 7.8h to 6.1h and muscle soreness rose to 4/5. Consider reducing training intensity by 15% for the next two days.',
+    confidence: 94,
+    priority: 'High',
+    suggested_actions: [
+      { label: 'Reduce Sprint Volume by 15%', action_type: 'adjust_load' },
+      { label: 'Schedule PT Soft Tissue Check', action_type: 'schedule_pt' },
+      { label: 'View Active Recovery Drills', action_type: 'view_drills' },
+    ],
+    created_at: '2026-07-29T08:00:00Z',
+  },
+  {
+    id: 'aii-2',
+    athlete_id: '33333333-3333-4333-8333-333333333302', // Jordan Thorne
+    title: 'Optimal Readiness: Ready for Peak Aerobic Threshold Test',
+    description:
+      'Your 7-day sleep average (8.1 hrs) and low soreness rating (2/5) indicate optimal physiological adaptation. You are primed for high-intensity threshold intervals.',
+    confidence: 97,
+    priority: 'Low',
+    suggested_actions: [
+      { label: 'Maintain Current Load', action_type: 'adjust_load' },
+    ],
+    created_at: '2026-07-29T08:00:00Z',
+  },
+  {
+    id: 'aii-3',
+    athlete_id: '33333333-3333-4333-8333-333333333306', // Sienna Brooks
+    title: 'High Soreness Trend: Shoulder & Javelin Load Warning',
+    description:
+      'Soreness in throwing shoulder has remained at 4/5 for 3 consecutive check-ins. Recommending a 48-hour throwing pause and resistance band stabilization.',
+    confidence: 91,
+    priority: 'Medium',
+    suggested_actions: [
+      { label: 'Pause Heavy Throwing for 48h', action_type: 'rest' },
+      { label: 'Schedule PT Evaluation', action_type: 'schedule_pt' },
+    ],
+    created_at: '2026-07-29T08:00:00Z',
+  },
+];
+
+export const DEMO_PROFILES: AthleteProfile[] = [
+  {
+    user_id: '33333333-3333-4333-8333-333333333301',
+    photo_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400',
+    sport: 'Track & Field',
+    specialty: '100m & 200m Sprints • Captain',
+    academic_year: 'Junior (Class of 2027)',
+    gpa: '3.84 / 4.0',
+    achievements: [
+      '2025 Pac-12 100m Champion (11.08s)',
+      'NCAA First-Team All-American',
+      'Stanford Athletics Honor Roll (2024–2026)',
+      'USATF Olympic Trials Qualifier',
+    ],
+    bio: 'Junior sprint specialist captaining the short-sprint squad. Focused on explosive block starts and qualifying for the 2026 NCAA Outdoor 100m finals.',
+    training_streak: 14,
+  },
+  {
+    user_id: '33333333-3333-4333-8333-333333333302',
+    photo_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+    sport: 'Track & Field',
+    specialty: '1500m & 5000m Distance',
+    academic_year: 'Senior (Class of 2026)',
+    gpa: '3.91 / 4.0',
+    achievements: [
+      '2025 NCAA Cross Country Finalist',
+      'Stanford Record Holder (3000m Indoor)',
+      'Academic All-American',
+    ],
+    bio: 'Distance runner majoring in Mechanical Engineering. Specializes in tactical kick pacing and high-altitude threshold conditioning.',
+    training_streak: 19,
+  },
+  {
+    user_id: '33333333-3333-4333-8333-333333333306',
+    photo_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
+    sport: 'Track & Field',
+    specialty: 'Javelin Throw',
+    academic_year: 'Sophomore (Class of 2028)',
+    gpa: '3.72 / 4.0',
+    achievements: [
+      '2025 NCAA West Regional Finalist',
+      'U-20 National Championship Silver Medalist',
+    ],
+    bio: 'Sophomore javelin thrower refining take-off angle mechanics and rotational shoulder stability.',
+    training_streak: 8,
+  },
+];
+
