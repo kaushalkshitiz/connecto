@@ -22,7 +22,11 @@ import {
   RecoveryTimelineChart,
   PerformanceProgressionChart,
 } from '../../../components/charts';
-import { generateAthleteSummary, AthleteContextInput } from '../../../services/ai';
+import {
+  generateAthleteSummary,
+  generateAthleteInsights,
+  AthleteContextInput,
+} from '../../../services/ai';
 import {
   Activity,
   Award,
@@ -53,7 +57,6 @@ export default function AthleteDashboardPage() {
     tasks,
     scholarships,
     tournaments,
-    aiInsights,
     updateTaskStatus,
     toggleScholarshipApplication,
     toggleTournamentRegistration,
@@ -75,11 +78,6 @@ export default function AthleteDashboardPage() {
   // Filter tasks for this athlete
   const athleteTasks = tasks.filter((t) => t.athlete_id === athleteUser.id);
 
-  // Filter AI insights for this athlete
-  const athleteInsights = aiInsights.filter(
-    (i) => !i.athlete_id || i.athlete_id === athleteUser.id
-  );
-
   // Prepare full AthleteContextInput for AI Assistant
   const athleteContext: AthleteContextInput = {
     athlete: athleteUser,
@@ -90,10 +88,13 @@ export default function AthleteDashboardPage() {
     sevenDayAvgSleep: summary.sevenDayAvgSleep,
     sevenDayAvgSoreness: summary.sevenDayAvgSoreness,
     sevenDayAvgMood: summary.sevenDayAvgMood,
-    daysSinceLastCheckIn: 0,
+    daysSinceLastCheckIn: summary.daysSinceLastCheckIn,
   };
 
   const aiReadinessSummary = generateAthleteSummary(athleteContext);
+
+  // AI insights computed live from this athlete's real check-in & medical data
+  const athleteInsights = generateAthleteInsights(athleteContext);
 
   return (
     <div className="space-y-8 pb-12 transition-colors duration-300">

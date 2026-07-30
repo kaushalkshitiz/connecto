@@ -19,6 +19,7 @@ import {
 } from '../../../components/charts';
 import {
   generateCoachSummary,
+  generateCoachInsights,
   summarizeRiskChanges,
   CoachContextInput,
 } from '../../../services/ai';
@@ -50,7 +51,8 @@ export default function CoachDashboardPage() {
     riskFlags,
     checkIns,
     tasks,
-    aiInsights,
+    physioNotes,
+    observations,
   } = useDemo();
 
   const [filterLevel, setFilterLevel] = useState<string>('all');
@@ -107,7 +109,7 @@ export default function CoachDashboardPage() {
     return matchesFilter && matchesSearch;
   });
 
-  // Build CoachContextInput for AI Service
+  // Build CoachContextInput for AI Service from live platform data
   const coachContext: CoachContextInput = {
     teamId: team.id,
     teamName: team.name,
@@ -115,12 +117,13 @@ export default function CoachDashboardPage() {
     profiles: [],
     riskFlags: riskFlags,
     checkIns: checkIns,
-    physioNotes: [],
-    observations: [],
+    physioNotes: physioNotes,
+    observations: observations,
   };
 
   const aiTeamSummary = generateCoachSummary(coachContext);
   const riskChanges = summarizeRiskChanges(coachContext);
+  const coachInsights = generateCoachInsights(coachContext);
 
   return (
     <div className="space-y-8 pb-12 transition-colors duration-300">
@@ -233,7 +236,7 @@ export default function CoachDashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {aiInsights.slice(0, 2).map((insight) => (
+            {coachInsights.slice(0, 2).map((insight) => (
               <AIInsightCard key={insight.id} insight={insight} />
             ))}
           </div>

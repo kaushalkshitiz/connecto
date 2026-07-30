@@ -7,7 +7,6 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useDemo } from '../../context/DemoContext';
 import { useTheme } from '../../context/ThemeContext';
 import {
   Activity,
@@ -18,7 +17,6 @@ import {
 } from 'lucide-react';
 
 export function Navbar() {
-  const { activeUser, activeRole } = useDemo();
   const { theme, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -59,21 +57,6 @@ export function Navbar() {
 
         {/* Right side controls */}
         <div className="flex items-center gap-3">
-          {/* Logged-in User Display */}
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-900 text-xs font-bold text-white dark:bg-emerald-600">
-              {activeUser.name.charAt(0)}
-            </div>
-            <div className="hidden text-left sm:block">
-              <div className="font-semibold text-slate-900 dark:text-white">
-                {activeUser.name}
-              </div>
-              <div className="text-[10px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                {activeRole}
-              </div>
-            </div>
-          </div>
-
           {/* Theme Toggle (White / Dark UI) */}
           <button
             onClick={toggleTheme}

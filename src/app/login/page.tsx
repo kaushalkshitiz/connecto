@@ -17,7 +17,6 @@ import {
   BookOpen,
   CheckCircle2,
   HeartPulse,
-  Info,
   KeyRound,
   Loader2,
   Lock,
@@ -135,12 +134,6 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950 py-12 px-4 sm:px-6 lg:px-8 text-white">
-      {/* Demo Mode Notice Banner (§Demo Mode requirement) */}
-      <div className="mx-auto mb-8 flex max-w-2xl items-center justify-center gap-2 rounded-2xl border border-purple-500/40 bg-purple-900/30 px-5 py-3 text-xs font-bold text-purple-200 backdrop-blur-md">
-        <Info size={16} className="text-purple-400 flex-shrink-0" />
-        <span>Demo Mode – Changes are not permanently saved.</span>
-      </div>
-
       <div className="mx-auto w-full max-w-md">
         <div className="flex flex-col items-center text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-xl">

@@ -5,10 +5,10 @@
 // PhysioModal — White & Dark UI support, Injury and treatment logger
 // =============================================================================
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDemo } from '../../context/DemoContext';
 import { validatePhysioNoteInput } from '../../lib/validators';
-import { PhysioStatus } from '../../types';
+import { PhysioNote, PhysioStatus } from '../../types';
 import {
   AlertCircle,
   HeartPulse,
@@ -19,6 +19,7 @@ interface PhysioModalProps {
   isOpen: boolean;
   onClose: () => void;
   athleteId: string;
+  editingNote?: PhysioNote | null;
   onSuccess?: () => void;
 }
 
@@ -26,16 +27,29 @@ export function PhysioModal({
   isOpen,
   onClose,
   athleteId,
+  editingNote,
   onSuccess,
 }: PhysioModalProps) {
-  const { users, team, activeUser, addPhysioNote } = useDemo();
+  const { users, team, activeUser, addPhysioNote, updatePhysioNote } = useDemo();
 
-  const athlete = users.find((u) => u.id === athleteId) || users[0];
+  const isEditing = Boolean(editingNote);
+  const athlete =
+    users.find((u) => u.id === (editingNote ? editingNote.athlete_id : athleteId)) ||
+    users[0];
 
   const [status, setStatus] = useState<PhysioStatus>('active');
   const [note, setNote] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Pre-fill the form when opening in edit mode
+  useEffect(() => {
+    if (isOpen) {
+      setStatus(editingNote ? editingNote.status : 'active');
+      setNote(editingNote ? editingNote.note : '');
+      setErrors([]);
+    }
+  }, [isOpen, editingNote]);
 
   if (!isOpen) return null;
 
@@ -52,14 +66,18 @@ export function PhysioModal({
     setIsSubmitting(true);
 
     setTimeout(() => {
-      addPhysioNote({
-        athlete_id: athleteId,
-        physio_id: activeUser.id,
-        team_id: team.id,
-        date: new Date().toISOString().slice(0, 10),
-        status,
-        note: note.trim(),
-      });
+      if (editingNote) {
+        updatePhysioNote(editingNote.id, { status, note: note.trim() });
+      } else {
+        addPhysioNote({
+          athlete_id: athleteId,
+          physio_id: activeUser.id,
+          team_id: team.id,
+          date: new Date().toISOString().slice(0, 10),
+          status,
+          note: note.trim(),
+        });
+      }
 
       setIsSubmitting(false);
       setNote('');
@@ -76,7 +94,9 @@ export function PhysioModal({
             <HeartPulse className="text-teal-600 dark:text-teal-400" size={22} />
             <div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                Log Physio Treatment / Injury Note
+                {isEditing
+                  ? 'Edit Physio Treatment / Injury Note'
+                  : 'Log Physio Treatment / Injury Note'}
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-400">
                 Athlete: <span className="font-semibold text-teal-600 dark:text-teal-300">{athlete.name}</span>
@@ -179,7 +199,11 @@ export function PhysioModal({
               disabled={isSubmitting}
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-teal-500/25 transition-all hover:from-teal-700 hover:to-emerald-700 disabled:opacity-50"
             >
-              {isSubmitting ? 'Saving...' : 'Save Physio Note'}
+              {isSubmitting
+                ? 'Saving...'
+                : isEditing
+                ? 'Update Physio Note'
+                : 'Save Physio Note'}
             </button>
           </div>
         </form>

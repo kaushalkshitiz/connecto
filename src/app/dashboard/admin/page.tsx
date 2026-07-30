@@ -35,7 +35,8 @@ import {
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
-  const { users, memberships, team, riskFlags, checkIns, aiInsights } = useDemo();
+  const { users, memberships, team, riskFlags, checkIns, physioNotes, observations } =
+    useDemo();
 
   const [reassignModalAthleteId, setReassignModalAthleteId] = useState<
     string | null
@@ -50,7 +51,7 @@ export default function AdminDashboardPage() {
     memberships.some((m) => m.user_id === u.id && m.role === 'athlete')
   );
 
-  // Prepare CoachContextInput for department-wide AI reporting
+  // Prepare CoachContextInput for department-wide AI reporting from live platform data
   const deptContext: CoachContextInput = {
     teamId: team.id,
     teamName: team.name,
@@ -58,8 +59,8 @@ export default function AdminDashboardPage() {
     profiles: [],
     riskFlags: riskFlags,
     checkIns: checkIns,
-    physioNotes: [],
-    observations: [],
+    physioNotes: physioNotes,
+    observations: observations,
   };
 
   const deptSummaryReport = generateDepartmentSummary(deptContext);
@@ -230,8 +231,8 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="mt-4 flex flex-wrap gap-4 border-t border-purple-100 pt-3 dark:border-purple-900/40 text-xs font-bold text-purple-900 dark:text-purple-300">
-            <span>High Risk: {deptSummaryReport.metrics?.highRiskCount ?? 2} Athletes</span>
-            <span>Watch Risk: {deptSummaryReport.metrics?.watchCount ?? 2} Athletes</span>
+            <span>High Risk: {deptSummaryReport.metrics?.highRiskCount ?? 0} Athletes</span>
+            <span>Watch Risk: {deptSummaryReport.metrics?.watchCount ?? 0} Athletes</span>
             <span>Data Retention: 100% Preserved</span>
           </div>
         </div>

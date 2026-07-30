@@ -25,6 +25,7 @@
 // =============================================================================
 
 import {
+  AIInsight,
   AIInsightReport,
   AthleteProfile,
   CheckIn,
@@ -151,6 +152,259 @@ export function buildCoachFactSheet(context: CoachContextInput): string {
     `Roster:\n${roster || 'No athletes on roster.'}`,
     `Recent Coach Observations:\n${recentObservations || 'None recorded.'}`,
   ].join('\n\n');
+}
+
+/**
+ * confidenceFromDataPoints()
+ * Confidence reflects how much real check-in history backs the insight —
+ * more data points mean a more reliable 7-day trend (never a prediction).
+ */
+function confidenceFromDataPoints(dataPoints: number): number {
+  return Math.min(96, 62 + dataPoints * 3);
+}
+
+/**
+ * generateAthleteInsights()
+ * Builds AIInsight cards for one athlete entirely from their real check-in,
+ * physio, and risk-flag data (rule thresholds from spec.md — never invented).
+ */
+export function generateAthleteInsights(input: AthleteContextInput): AIInsight[] {
+  const {
+    athlete,
+    currentRisk,
+    checkIns,
+    physioNotes,
+    sevenDayAvgSleep,
+    sevenDayAvgSoreness,
+    sevenDayAvgMood,
+    daysSinceLastCheckIn,
+  } = input;
+
+  const insights: AIInsight[] = [];
+  const now = new Date().toISOString();
+  const confidence = confidenceFromDataPoints(Math.min(checkIns.length, 10));
+  const activeInjuries = physioNotes.filter(
+    (p) => p.status.toLowerCase() === 'active'
+  );
+
+  const baseMetrics: AIInsight['metrics'] = [
+    {
+      label: `7-Day Avg Sleep: ${sevenDayAvgSleep !== null ? `${sevenDayAvgSleep}h` : 'N/A'}`,
+      trend: sevenDayAvgSleep !== null && sevenDayAvgSleep < 6.0 ? 'down' : 'info',
+    },
+    {
+      label: `7-Day Avg Soreness: ${sevenDayAvgSoreness !== null ? `${sevenDayAvgSoreness}/5` : 'N/A'}`,
+      trend: sevenDayAvgSoreness !== null && sevenDayAvgSoreness >= 4.0 ? 'up' : 'info',
+    },
+  ];
+
+  if (sevenDayAvgSleep !== null && sevenDayAvgSleep < 6.0) {
+    insights.push({
+      id: `insight-sleep-${athlete.id}`,
+      athlete_id: athlete.id,
+      title: 'Sleep Deficit Below Watch Threshold',
+      description:
+        `Your 7-day average sleep is ${sevenDayAvgSleep}h, below the 6.0h Watch threshold. ` +
+        `Reduced sleep limits recovery between sessions — consider an earlier, consistent bedtime and discuss a temporary load reduction with your coach.`,
+      confidence,
+      priority: currentRisk.level === 'high' ? 'High' : 'Medium',
+      suggested_actions: [
+        { label: 'Reduce Training Load 15%', action_type: 'adjust_load' },
+        { label: 'Add Extra Rest Day', action_type: 'rest' },
+      ],
+      metrics: [
+        ...baseMetrics,
+        { label: `Risk Level: ${currentRisk.level.toUpperCase()}`, trend: 'info' },
+      ],
+      created_at: now,
+    });
+  }
+
+  if (sevenDayAvgSoreness !== null && sevenDayAvgSoreness >= 4.0) {
+    insights.push({
+      id: `insight-soreness-${athlete.id}`,
+      athlete_id: athlete.id,
+      title: 'Elevated Muscle Soreness Trend',
+      description:
+        `Your 7-day average soreness is ${sevenDayAvgSoreness}/5, at or above the 4.0 Watch threshold. ` +
+        `Prioritize active recovery — mobility work, foam rolling, and lighter technique sessions until soreness trends back down.`,
+      confidence,
+      priority: currentRisk.level === 'high' ? 'High' : 'Medium',
+      suggested_actions: [
+        { label: 'Schedule Recovery Session', action_type: 'schedule_pt' },
+        { label: 'View Mobility Drills', action_type: 'view_drills' },
+      ],
+      metrics: [
+        ...baseMetrics,
+        { label: `Risk Level: ${currentRisk.level.toUpperCase()}`, trend: 'info' },
+      ],
+      created_at: now,
+    });
+  }
+
+  if (activeInjuries.length > 0) {
+    insights.push({
+      id: `insight-injury-${athlete.id}`,
+      athlete_id: athlete.id,
+      title: 'Active Injury Note on File',
+      description:
+        `Your physio team has an active treatment note on file: "${activeInjuries[0].note}" ` +
+        `Follow the prescribed rehab plan and confirm clearance before returning to full intensity.`,
+      confidence: 96,
+      priority: 'High',
+      suggested_actions: [
+        { label: 'Follow Physio Rehab Plan', action_type: 'schedule_pt' },
+        { label: 'Restrict High-Intensity Work', action_type: 'adjust_load' },
+      ],
+      metrics: [
+        { label: `Active Injury Notes: ${activeInjuries.length}`, trend: 'up' },
+        { label: `Risk Level: ${currentRisk.level.toUpperCase()}`, trend: 'info' },
+      ],
+      created_at: now,
+    });
+  }
+
+  if (daysSinceLastCheckIn >= 4) {
+    insights.push({
+      id: `insight-checkin-${athlete.id}`,
+      athlete_id: athlete.id,
+      title: 'Check-In Gap Detected',
+      description:
+        `No check-in has been submitted for ${daysSinceLastCheckIn} days (4+ days triggers a Watch flag). ` +
+        `Log today's check-in so your readiness scoring stays accurate.`,
+      confidence: 96,
+      priority: 'Medium',
+      suggested_actions: [
+        { label: 'Log Daily Check-In', action_type: 'view_drills' },
+      ],
+      metrics: [
+        { label: `Days Since Last Check-In: ${daysSinceLastCheckIn}`, trend: 'up' },
+      ],
+      created_at: now,
+    });
+  }
+
+  if (insights.length === 0) {
+    insights.push({
+      id: `insight-optimal-${athlete.id}`,
+      athlete_id: athlete.id,
+      title: 'Recovery Metrics Within Optimal Range',
+      description:
+        `All monitored indicators are within normal thresholds: sleep averaging ${
+          sevenDayAvgSleep !== null ? `${sevenDayAvgSleep}h` : 'N/A'
+        }, soreness at ${
+          sevenDayAvgSoreness !== null ? `${sevenDayAvgSoreness}/5` : 'N/A'
+        }${sevenDayAvgMood !== null ? `, and mood at ${sevenDayAvgMood}/5` : ''}. ` +
+        `Maintain your current training and recovery routine.`,
+      confidence,
+      priority: 'Low',
+      suggested_actions: [
+        { label: 'Maintain Current Plan', action_type: 'view_drills' },
+      ],
+      metrics: baseMetrics,
+      created_at: now,
+    });
+  }
+
+  return insights;
+}
+
+/**
+ * generateCoachInsights()
+ * Builds roster-level AIInsight cards for the coach overview from live
+ * risk flags and check-in data — one card per flagged athlete (High first).
+ */
+export function generateCoachInsights(input: CoachContextInput): AIInsight[] {
+  const { athletes, riskFlags, checkIns, physioNotes } = input;
+  const now = new Date().toISOString();
+
+  const flagged = [
+    ...riskFlags.filter((rf) => rf.level === 'high'),
+    ...riskFlags.filter((rf) => rf.level === 'watch'),
+  ];
+
+  const insights: AIInsight[] = flagged.map((rf) => {
+    const athlete = athletes.find((a) => a.id === rf.athlete_id);
+    const name = athlete ? athlete.name : 'Athlete';
+    const athleteCheckIns = checkIns.filter((c) => c.athlete_id === rf.athlete_id);
+    const recent = [...athleteCheckIns]
+      .sort((a, b) => (a.date > b.date ? -1 : 1))
+      .slice(0, 7);
+
+    const avgSleep = recent.length
+      ? Number(
+          (recent.reduce((s, c) => s + Number(c.sleep_hours), 0) / recent.length).toFixed(1)
+        )
+      : null;
+    const avgSoreness = recent.length
+      ? Number(
+          (recent.reduce((s, c) => s + Number(c.soreness), 0) / recent.length).toFixed(1)
+        )
+      : null;
+    const hasActiveInjury = physioNotes.some(
+      (p) => p.athlete_id === rf.athlete_id && p.status.toLowerCase() === 'active'
+    );
+
+    const isHigh = rf.level === 'high';
+
+    return {
+      id: `coach-insight-${rf.athlete_id}`,
+      athlete_id: rf.athlete_id,
+      title: `${name}: ${isHigh ? 'High Risk — Load Review Needed' : 'Watch — Monitor Recovery Trend'}`,
+      description:
+        `${name} is flagged ${rf.level.toUpperCase()} by the rule engine. Trigger: ${rf.reason}. ` +
+        (isHigh
+          ? 'Review this week’s training volume and coordinate with medical staff before the next high-intensity session.'
+          : 'Keep an eye on the next few check-ins and consider lighter technical work if the trend continues.'),
+      confidence: confidenceFromDataPoints(Math.min(athleteCheckIns.length, 10)),
+      priority: isHigh ? 'High' : 'Medium',
+      suggested_actions: isHigh
+        ? [
+            { label: 'Reduce Training Load', action_type: 'adjust_load' },
+            { label: 'Coordinate with Physio', action_type: 'schedule_pt' },
+          ]
+        : [
+            { label: 'Assign Recovery Task', action_type: 'rest' },
+            { label: 'Review Check-In History', action_type: 'view_drills' },
+          ],
+      metrics: [
+        {
+          label: `7-Day Avg Sleep: ${avgSleep !== null ? `${avgSleep}h` : 'N/A'}`,
+          trend: avgSleep !== null && avgSleep < 6.0 ? 'down' : 'info',
+        },
+        {
+          label: `7-Day Avg Soreness: ${avgSoreness !== null ? `${avgSoreness}/5` : 'N/A'}`,
+          trend: avgSoreness !== null && avgSoreness >= 4.0 ? 'up' : 'info',
+        },
+        ...(hasActiveInjury
+          ? [{ label: 'Active Injury Note on File', trend: 'up' as const }]
+          : []),
+      ],
+      created_at: now,
+    };
+  });
+
+  if (insights.length === 0) {
+    insights.push({
+      id: 'coach-insight-optimal',
+      athlete_id: '',
+      title: 'Full Roster Within Optimal Readiness',
+      description:
+        `All ${athletes.length} athletes are currently Low risk. No sleep, soreness, or check-in adherence rules have been triggered — maintain current training plans.`,
+      confidence: confidenceFromDataPoints(Math.min(checkIns.length, 10)),
+      priority: 'Low',
+      suggested_actions: [
+        { label: 'Maintain Current Plans', action_type: 'view_drills' },
+      ],
+      metrics: [
+        { label: `Athletes Monitored: ${athletes.length}`, trend: 'info' },
+        { label: `Check-Ins Logged: ${checkIns.length}`, trend: 'info' },
+      ],
+      created_at: now,
+    });
+  }
+
+  return insights;
 }
 
 /**

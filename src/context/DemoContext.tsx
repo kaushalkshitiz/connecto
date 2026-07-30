@@ -49,6 +49,10 @@ interface DemoContextType {
   addCheckIn: (checkIn: Omit<CheckIn, 'id' | 'created_at'>) => void;
   addObservation: (obs: Omit<CoachObservation, 'id' | 'created_at'>) => void;
   addPhysioNote: (note: Omit<PhysioNote, 'id' | 'created_at'>) => void;
+  updatePhysioNote: (
+    noteId: string,
+    updates: Pick<PhysioNote, 'status' | 'note'>
+  ) => void;
   reassignAthleteCoach: (athleteId: string, newCoachId: string | null) => void;
   addTask: (task: Omit<TrainingTask, 'id' | 'status'>) => void;
   updateTaskStatus: (taskId: string, status: TaskStatus, proofUrl?: string, proofNote?: string) => void;
@@ -308,6 +312,20 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     recalculateAthleteRisk(newPn.athlete_id, checkIns, updatedPhysioNotes);
   };
 
+  const updatePhysioNote = (
+    noteId: string,
+    updates: Pick<PhysioNote, 'status' | 'note'>
+  ) => {
+    const existing = physioNotes.find((pn) => pn.id === noteId);
+    if (!existing) return;
+
+    const updatedPhysioNotes = physioNotes.map((pn) =>
+      pn.id === noteId ? { ...pn, status: updates.status, note: updates.note } : pn
+    );
+    setPhysioNotes(updatedPhysioNotes);
+    recalculateAthleteRisk(existing.athlete_id, checkIns, updatedPhysioNotes);
+  };
+
   /**
    * Reassign athlete between coaches (demonstrating ON DELETE SET NULL / zero data loss)
    */
@@ -491,6 +509,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         addCheckIn,
         addObservation,
         addPhysioNote,
+        updatePhysioNote,
         reassignAthleteCoach,
         addTask,
         updateTaskStatus,

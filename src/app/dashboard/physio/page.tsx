@@ -11,12 +11,14 @@ import { useDemo } from '../../../context/DemoContext';
 import { RiskBadge } from '../../../components/ui/RiskBadge';
 import { PhysioModal } from '../../../components/forms/PhysioModal';
 import { canEditMedicalRecords, isRoleAllowedForRoute } from '../../../lib/rbac';
+import { PhysioNote } from '../../../types';
 import {
   AlertCircle,
   Calendar,
   CheckCircle2,
   HeartPulse,
   Info,
+  Pencil,
   Plus,
   ShieldAlert,
   UserCheck,
@@ -35,6 +37,7 @@ export default function PhysioDashboardPage() {
     athleteUsers[0]?.id || ''
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState<PhysioNote | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const filteredNotes = physioNotes.filter((pn) => {
@@ -207,6 +210,9 @@ export default function PhysioDashboardPage() {
                   <th className="py-4 px-4">Clinical Treatment / Rehab Note</th>
                   <th className="py-4 px-4">Logged By</th>
                   <th className="py-4 pl-4 pr-6 text-right">Current Risk</th>
+                  {canLogTreatment && (
+                    <th className="py-4 pl-4 pr-6 text-right">Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 text-sm">
@@ -261,6 +267,21 @@ export default function PhysioDashboardPage() {
                           size="sm"
                         />
                       </td>
+
+                      {canLogTreatment && (
+                        <td className="py-4 pl-4 pr-6 text-right">
+                          <button
+                            onClick={() => {
+                              setEditingNote(pn);
+                              setIsModalOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-teal-300 bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-800 shadow-sm transition-all hover:bg-teal-100 dark:border-teal-500/40 dark:bg-teal-950/60 dark:text-teal-300 dark:hover:bg-teal-900/60"
+                          >
+                            <Pencil size={13} />
+                            <span>Edit</span>
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -268,7 +289,7 @@ export default function PhysioDashboardPage() {
                 {filteredNotes.length === 0 && (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={canLogTreatment ? 7 : 6}
                       className="py-12 text-center text-sm text-slate-500"
                     >
                       No physio treatment notes found matching the selected status filter.
@@ -283,8 +304,12 @@ export default function PhysioDashboardPage() {
 
       <PhysioModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingNote(null);
+        }}
         athleteId={selectedAthleteId}
+        editingNote={editingNote}
       />
     </div>
   );

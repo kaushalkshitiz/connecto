@@ -89,21 +89,23 @@ export function AIInsightCard({ insight, onActionSelect }: AIInsightCardProps) {
           &ldquo;{insight.description}&rdquo;
         </p>
 
-        {/* Diagnostic Metadata Footer (why did this trigger) */}
-        <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-400">
-          <div className="flex items-center gap-1.5">
-            <TrendingDown size={14} className="text-rose-400" />
-            <span>Avg Sleep: 7.8h &rarr; 6.1h</span>
+        {/* Diagnostic Metadata Footer (computed from real check-in data) */}
+        {insight.metrics && insight.metrics.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-400">
+            {insight.metrics.map((metric, idx) => (
+              <div key={idx} className="flex items-center gap-1.5">
+                {metric.trend === 'down' ? (
+                  <TrendingDown size={14} className="text-rose-400" />
+                ) : metric.trend === 'up' ? (
+                  <TrendingUp size={14} className="text-amber-400" />
+                ) : (
+                  <HelpCircle size={14} className="text-emerald-400" />
+                )}
+                <span>{metric.label}</span>
+              </div>
+            ))}
           </div>
-          <div className="flex items-center gap-1.5">
-            <TrendingUp size={14} className="text-amber-400" />
-            <span>Hamstring Soreness: 4/5</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <HelpCircle size={14} className="text-emerald-400" />
-            <span>Impact: High injury risk if unadjusted</span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Suggested Actions Block */}

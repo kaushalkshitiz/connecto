@@ -175,6 +175,11 @@ export interface AIInsight {
     label: string;
     action_type: 'adjust_load' | 'schedule_pt' | 'view_drills' | 'rest';
   }[];
+  // Diagnostic metrics computed from real check-in data (shown in the card footer)
+  metrics?: {
+    label: string;
+    trend: 'up' | 'down' | 'info';
+  }[];
   created_at: string;
 }
 
