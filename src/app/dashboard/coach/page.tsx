@@ -327,9 +327,15 @@ export default function CoachDashboardPage() {
           </div>
         </div>
 
-        {activeChartTab === 'timeline' && <RiskTimelineChart riskFlags={riskFlags} />}
+        {activeChartTab === 'timeline' && (
+          <RiskTimelineChart riskFlags={riskFlags} athletes={athleteUsers} />
+        )}
         {activeChartTab === 'adherence' && (
-          <CheckInCompletionChart checkIns={checkIns} totalAthletes={athleteUsers.length} />
+          <CheckInCompletionChart
+            checkIns={checkIns}
+            totalAthletes={athleteUsers.length}
+            athletes={athleteUsers}
+          />
         )}
         {activeChartTab === 'recovery' && <RecoveryTimelineChart checkIns={checkIns} />}
       </div>

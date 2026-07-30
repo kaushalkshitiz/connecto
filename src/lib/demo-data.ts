@@ -375,7 +375,7 @@ export const DEMO_SCHOLARSHIPS: Scholarship[] = [
     eligibility: 'Top-8 conference finalists in sprints, hurdles, or field events with min 3.3 GPA.',
     description:
       'Annual endowed grant supporting high-achieving student-athletes with tuition, training equipment, and international competition travel grants.',
-    applied: true,
+    appliedAthleteIds: ['33333333-3333-4333-8333-333333333301'], // Maya Lin
   },
   {
     id: 'sch-2',
@@ -387,7 +387,7 @@ export const DEMO_SCHOLARSHIPS: Scholarship[] = [
     eligibility: 'Active varsity roster athlete with cumulative GPA >= 3.75 in STEM or Humanities.',
     description:
       'Recognizes student-athletes who balance rigorous academic coursework with varsity competition.',
-    applied: false,
+    appliedAthleteIds: [],
   },
   {
     id: 'sch-3',
@@ -399,7 +399,7 @@ export const DEMO_SCHOLARSHIPS: Scholarship[] = [
     eligibility: 'Collegiate athletes qualifying for USATF National Olympic Trials in short sprints or distance.',
     description:
       'Includes sports science lab testing, custom footwear development access, and annual stipend.',
-    applied: false,
+    appliedAthleteIds: [],
   },
   {
     id: 'sch-4',
@@ -411,7 +411,7 @@ export const DEMO_SCHOLARSHIPS: Scholarship[] = [
     eligibility: 'Athletes demonstrating active leadership in youth sports outreach and mentorship.',
     description:
       'Empowers collegiate leaders to host community athletics clinics in underserved school districts.',
-    applied: false,
+    appliedAthleteIds: [],
   },
 ];
 
@@ -425,7 +425,7 @@ export const DEMO_TOURNAMENTS: Tournament[] = [
     registration_status: 'Open',
     details:
       'Premier conference championship meet qualifying top regional finishers for NCAA West Preliminaries.',
-    registered: true,
+    registeredAthleteIds: ['33333333-3333-4333-8333-333333333301'], // Maya Lin
   },
   {
     id: 'tour-2',
@@ -436,7 +436,7 @@ export const DEMO_TOURNAMENTS: Tournament[] = [
     registration_status: 'Registered',
     details:
       'Official NCAA regional qualification tournament to determine the 48 finalists advancing to NCAA Outdoors.',
-    registered: true,
+    registeredAthleteIds: ['33333333-3333-4333-8333-333333333301'], // Maya Lin
   },
   {
     id: 'tour-3',
@@ -447,7 +447,7 @@ export const DEMO_TOURNAMENTS: Tournament[] = [
     registration_status: 'Closed',
     details:
       'Annual premier collegiate and professional early-season invitational featuring over 3,000 athletes.',
-    registered: false,
+    registeredAthleteIds: [],
   },
   {
     id: 'tour-4',
@@ -458,7 +458,7 @@ export const DEMO_TOURNAMENTS: Tournament[] = [
     registration_status: 'Closing Soon',
     details:
       'National trials competition selecting the United States Olympic Track & Field team.',
-    registered: false,
+    registeredAthleteIds: [],
   },
 ];
 

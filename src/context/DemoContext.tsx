@@ -125,8 +125,26 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
           setPhysioNotes(parsed.physioNotes);
           setRiskFlags(parsed.riskFlags);
           if (parsed.tasks) setTasks(parsed.tasks);
-          if (parsed.scholarships) setScholarships(parsed.scholarships);
-          if (parsed.tournaments) setTournaments(parsed.tournaments);
+          if (parsed.scholarships) {
+            setScholarships(
+              parsed.scholarships.map((s: Scholarship) => ({
+                ...s,
+                appliedAthleteIds: Array.isArray(s.appliedAthleteIds)
+                  ? s.appliedAthleteIds
+                  : [],
+              }))
+            );
+          }
+          if (parsed.tournaments) {
+            setTournaments(
+              parsed.tournaments.map((t: Tournament) => ({
+                ...t,
+                registeredAthleteIds: Array.isArray(t.registeredAthleteIds)
+                  ? t.registeredAthleteIds
+                  : [],
+              }))
+            );
+          }
           if (parsed.aiInsights) setAiInsights(parsed.aiInsights);
           if (parsed.profiles) setProfiles(parsed.profiles);
           if (parsed.activeUserId) {
@@ -415,15 +433,31 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
   const toggleScholarshipApplication = (scholarshipId: string) => {
     setScholarships((prev) =>
-      prev.map((s) => (s.id === scholarshipId ? { ...s, applied: !s.applied } : s))
+      prev.map((s) => {
+        if (s.id !== scholarshipId) return s;
+        const alreadyApplied = s.appliedAthleteIds.includes(activeUser.id);
+        return {
+          ...s,
+          appliedAthleteIds: alreadyApplied
+            ? s.appliedAthleteIds.filter((id) => id !== activeUser.id)
+            : [...s.appliedAthleteIds, activeUser.id],
+        };
+      })
     );
   };
 
   const toggleTournamentRegistration = (tournamentId: string) => {
     setTournaments((prev) =>
-      prev.map((t) =>
-        t.id === tournamentId ? { ...t, registered: !t.registered } : t
-      )
+      prev.map((t) => {
+        if (t.id !== tournamentId) return t;
+        const alreadyRegistered = t.registeredAthleteIds.includes(activeUser.id);
+        return {
+          ...t,
+          registeredAthleteIds: alreadyRegistered
+            ? t.registeredAthleteIds.filter((id) => id !== activeUser.id)
+            : [...t.registeredAthleteIds, activeUser.id],
+        };
+      })
     );
   };
 

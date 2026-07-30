@@ -13,22 +13,30 @@ import {
   ChevronRight,
   MapPin,
   Trophy,
+  Users,
 } from 'lucide-react';
 
 interface TournamentCardProps {
   tournament: Tournament;
+  /** Athlete view: whether the current athlete has registered, and a toggle handler. */
+  isRegistered?: boolean;
   onRegisterToggle?: (id: string) => void;
+  /** Coach/Admin view: show a read-only list of registered athletes instead of a Register button. */
+  registrants?: { id: string; name: string }[];
+  totalEligible?: number;
 }
 
 export function TournamentCard({
   tournament,
+  isRegistered = false,
   onRegisterToggle,
+  registrants,
+  totalEligible,
 }: TournamentCardProps) {
-  const [registered, setRegistered] = useState(tournament.registered || false);
+  const isStaffView = registrants !== undefined;
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   const handleToggle = () => {
-    setRegistered(!registered);
     if (onRegisterToggle) {
       onRegisterToggle(tournament.id);
     }
@@ -81,9 +89,41 @@ export function TournamentCard({
           <p className="mt-4 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
             {tournament.details}
           </p>
+
+          {/* Coach/Admin: Registrant List */}
+          {isStaffView && (
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-950">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white">
+                <span className="flex items-center gap-1.5">
+                  <Users size={15} className="text-emerald-600 dark:text-emerald-400" />
+                  <span>Registered Athletes</span>
+                </span>
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                  {registrants!.length} / {totalEligible ?? registrants!.length} eligible
+                </span>
+              </div>
+              {registrants!.length > 0 ? (
+                <ul className="mt-2 space-y-1">
+                  {registrants!.map((r) => (
+                    <li
+                      key={r.id}
+                      className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300"
+                    >
+                      <CheckCircle2 size={12} className="text-emerald-600 dark:text-emerald-400" />
+                      <span>{r.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                  No athletes have registered yet.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Footer Row: View Details Button & Register Toggle */}
+        {/* Footer Row: View Details Button & Register Toggle (Athlete view only) */}
         <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
           <button
             type="button"
@@ -94,32 +134,34 @@ export function TournamentCard({
             <ChevronRight size={14} />
           </button>
 
-          <button
-            type="button"
-            onClick={handleToggle}
-            disabled={tournament.registration_status === 'Closed'}
-            className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
-              registered
-                ? 'border border-blue-300 bg-blue-50 text-blue-900 shadow-sm dark:border-blue-700 dark:bg-blue-950/80 dark:text-blue-300'
-                : tournament.registration_status === 'Closed'
-                ? 'cursor-not-allowed bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-600'
-                : 'bg-emerald-600 text-white shadow-md hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700'
-            }`}
-          >
-            {registered ? (
-              <>
-                <CheckCircle2 size={15} className="text-blue-600 dark:text-blue-400" />
-                <span>Registered</span>
-              </>
-            ) : tournament.registration_status === 'Closed' ? (
-              <span>Registration Closed</span>
-            ) : (
-              <>
-                <Trophy size={14} />
-                <span>Register Athlete</span>
-              </>
-            )}
-          </button>
+          {!isStaffView && (
+            <button
+              type="button"
+              onClick={handleToggle}
+              disabled={tournament.registration_status === 'Closed'}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                isRegistered
+                  ? 'border border-blue-300 bg-blue-50 text-blue-900 shadow-sm dark:border-blue-700 dark:bg-blue-950/80 dark:text-blue-300'
+                  : tournament.registration_status === 'Closed'
+                  ? 'cursor-not-allowed bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-600'
+                  : 'bg-emerald-600 text-white shadow-md hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700'
+              }`}
+            >
+              {isRegistered ? (
+                <>
+                  <CheckCircle2 size={15} className="text-blue-600 dark:text-blue-400" />
+                  <span>Registered</span>
+                </>
+              ) : tournament.registration_status === 'Closed' ? (
+                <span>Registration Closed</span>
+              ) : (
+                <>
+                  <Trophy size={14} />
+                  <span>Register Athlete</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
@@ -195,17 +237,19 @@ export function TournamentCard({
               >
                 Close
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  handleToggle();
-                  setShowDetailsModal(false);
-                }}
-                disabled={tournament.registration_status === 'Closed'}
-                className="rounded-xl bg-blue-900 px-5 py-2 text-xs font-bold text-white shadow-sm hover:bg-blue-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 disabled:opacity-50"
-              >
-                {registered ? 'Cancel Registration' : 'Confirm Registration'}
-              </button>
+              {!isStaffView && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleToggle();
+                    setShowDetailsModal(false);
+                  }}
+                  disabled={tournament.registration_status === 'Closed'}
+                  className="rounded-xl bg-blue-900 px-5 py-2 text-xs font-bold text-white shadow-sm hover:bg-blue-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  {isRegistered ? 'Cancel Registration' : 'Confirm Registration'}
+                </button>
+              )}
             </div>
           </div>
         </div>

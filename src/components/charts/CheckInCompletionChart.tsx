@@ -16,16 +16,18 @@ import {
   YAxis,
 } from 'recharts';
 import { CheckIn } from '../../types';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface CheckInCompletionChartProps {
   checkIns: CheckIn[];
   totalAthletes?: number;
+  athletes?: { id: string; name: string }[];
 }
 
 export function CheckInCompletionChart({
   checkIns,
   totalAthletes = 6,
+  athletes,
 }: CheckInCompletionChartProps) {
   // Aggregate check-ins by date to calculate daily adherence %
   const dateMap: Record<string, { date: string; fullDate: string; count: number; percentage: number }> = {};
@@ -74,7 +76,7 @@ export function CheckInCompletionChart({
               Daily Check-In Adherence Rate (%)
             </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Missing check-ins for 4+ consecutive days triggers Watch risk (§3.5)
+              Percentage of the roster completing their daily self-report check-in
             </p>
           </div>
         </div>
@@ -124,6 +126,54 @@ export function CheckInCompletionChart({
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Per-Athlete Check-In Status */}
+      {athletes && (
+        <div className="mt-5 space-y-1.5 border-t border-slate-100 pt-4 dark:border-slate-800">
+          <p className="mb-2 text-xs font-bold text-slate-900 dark:text-white">
+            Athlete Check-In Status
+          </p>
+          {athletes.map((athlete) => {
+            const athleteCheckIns = checkIns
+              .filter((ci) => ci.athlete_id === athlete.id)
+              .sort((a, b) => (a.date > b.date ? -1 : 1));
+            const lastCheckIn = athleteCheckIns[0];
+
+            let daysSince: number | null = null;
+            if (lastCheckIn) {
+              const lastDate = new Date(lastCheckIn.date + 'T00:00:00Z');
+              daysSince = Math.floor(
+                Math.abs(new Date().getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
+              );
+            }
+
+            const isOverdue = daysSince === null || daysSince >= 4;
+
+            return (
+              <div
+                key={athlete.id}
+                className="flex items-center justify-between rounded-xl px-3 py-2 text-xs even:bg-slate-50 dark:even:bg-slate-950/50"
+              >
+                <span className="font-semibold text-slate-900 dark:text-white">
+                  {athlete.name}
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1.5 font-semibold ${
+                    isOverdue
+                      ? 'text-rose-600 dark:text-rose-400'
+                      : 'text-emerald-600 dark:text-emerald-400'
+                  }`}
+                >
+                  {isOverdue ? <AlertCircle size={13} /> : <CheckCircle2 size={13} />}
+                  {lastCheckIn
+                    ? `Last check-in ${daysSince === 0 ? 'today' : `${daysSince}d ago`} (${lastCheckIn.date})`
+                    : 'No check-ins recorded'}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

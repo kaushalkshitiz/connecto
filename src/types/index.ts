@@ -148,7 +148,8 @@ export interface Scholarship {
   category: string;
   eligibility: string;
   description: string;
-  applied?: boolean;
+  // IDs of athletes (User.id) who have registered/applied for this scholarship.
+  appliedAthleteIds: string[];
 }
 
 export interface Tournament {
@@ -159,7 +160,8 @@ export interface Tournament {
   date: string;
   registration_status: 'Open' | 'Closing Soon' | 'Registered' | 'Closed';
   details: string;
-  registered?: boolean;
+  // IDs of athletes (User.id) who have registered for this tournament.
+  registeredAthleteIds: string[];
 }
 
 export interface AIInsight {

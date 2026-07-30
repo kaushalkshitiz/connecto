@@ -239,8 +239,12 @@ export default function AdminDashboardPage() {
 
       {/* RECHARTS ORGANIZATION VISUAL ANALYTICS */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <RiskTimelineChart riskFlags={riskFlags} />
-        <CheckInCompletionChart checkIns={checkIns} totalAthletes={athleteUsers.length} />
+        <RiskTimelineChart riskFlags={riskFlags} athletes={athleteUsers} />
+        <CheckInCompletionChart
+          checkIns={checkIns}
+          totalAthletes={athleteUsers.length}
+          athletes={athleteUsers}
+        />
       </div>
 
       {/* INTERACTIVE CONVERSATIONAL AI ADMIN ASSISTANT */}

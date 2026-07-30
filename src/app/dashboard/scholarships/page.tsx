@@ -9,15 +9,28 @@ import React, { useState } from 'react';
 import { useDemo } from '../../../context/DemoContext';
 import { ScholarshipCard } from '../../../components/ui/ScholarshipCard';
 import {
-  Award,
   Filter,
   GraduationCap,
   Search,
   Sparkles,
+  Users,
 } from 'lucide-react';
 
 export default function ScholarshipsPage() {
-  const { scholarships, toggleScholarshipApplication } = useDemo();
+  const {
+    scholarships,
+    toggleScholarshipApplication,
+    activeRole,
+    activeUser,
+    users,
+    memberships,
+  } = useDemo();
+
+  const isStaffView = activeRole === 'coach' || activeRole === 'admin';
+
+  const athleteUsers = users.filter((u) =>
+    memberships.some((m) => m.user_id === u.id && m.role === 'athlete')
+  );
 
   const [filterCategory, setFilterCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,10 +75,21 @@ export default function ScholarshipsPage() {
         </div>
 
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-          <Sparkles size={15} />
-          <span>
-            {scholarships.filter((s) => s.applied).length} Applied Scholarship(s)
-          </span>
+          {isStaffView ? (
+            <>
+              <Users size={15} />
+              <span>
+                {scholarships.reduce((sum, s) => sum + s.appliedAthleteIds.length, 0)} Total Registration(s) Across Roster
+              </span>
+            </>
+          ) : (
+            <>
+              <Sparkles size={15} />
+              <span>
+                {scholarships.filter((s) => s.appliedAthleteIds.includes(activeUser.id)).length} Applied Scholarship(s)
+              </span>
+            </>
+          )}
         </div>
       </div>
 
@@ -116,13 +140,25 @@ export default function ScholarshipsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {visibleScholarships.map((sch) => (
-            <ScholarshipCard
-              key={sch.id}
-              scholarship={sch}
-              onApplyToggle={(id) => toggleScholarshipApplication(id)}
-            />
-          ))}
+          {visibleScholarships.map((sch) =>
+            isStaffView ? (
+              <ScholarshipCard
+                key={sch.id}
+                scholarship={sch}
+                registrants={athleteUsers
+                  .filter((a) => sch.appliedAthleteIds.includes(a.id))
+                  .map((a) => ({ id: a.id, name: a.name }))}
+                totalEligible={athleteUsers.length}
+              />
+            ) : (
+              <ScholarshipCard
+                key={sch.id}
+                scholarship={sch}
+                isApplied={sch.appliedAthleteIds.includes(activeUser.id)}
+                onApplyToggle={(id) => toggleScholarshipApplication(id)}
+              />
+            )
+          )}
         </div>
       )}
     </div>

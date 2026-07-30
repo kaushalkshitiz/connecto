@@ -12,21 +12,15 @@ import { useTheme } from '../../context/ThemeContext';
 import {
   Activity,
   Bell,
-  CheckCircle2,
-  ChevronDown,
   Moon,
   Search,
-  ShieldCheck,
   Sun,
-  UserCheck,
-  Users,
 } from 'lucide-react';
 
 export function Navbar() {
-  const { users, activeUser, activeRole, switchUser } = useDemo();
+  const { activeUser, activeRole } = useDemo();
   const { theme, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
-  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   return (
@@ -65,59 +59,19 @@ export function Navbar() {
 
         {/* Right side controls */}
         <div className="flex items-center gap-3">
-          {/* Active User / Role Switcher Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition-all hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
-            >
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-900 text-xs font-bold text-white dark:bg-emerald-600">
-                {activeUser.name.charAt(0)}
+          {/* Logged-in User Display */}
+          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-900 text-xs font-bold text-white dark:bg-emerald-600">
+              {activeUser.name.charAt(0)}
+            </div>
+            <div className="hidden text-left sm:block">
+              <div className="font-semibold text-slate-900 dark:text-white">
+                {activeUser.name}
               </div>
-              <div className="hidden text-left sm:block">
-                <div className="font-semibold text-slate-900 dark:text-white">
-                  {activeUser.name}
-                </div>
-                <div className="text-[10px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                  {activeRole}
-                </div>
+              <div className="text-[10px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                {activeRole}
               </div>
-              <ChevronDown size={14} className="text-slate-400" />
-            </button>
-
-            {isRoleDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl ring-1 ring-black/5 dark:border-slate-800 dark:bg-slate-900 dark:ring-white/10">
-                <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  Switch Active Persona
-                </div>
-                <div className="max-h-64 overflow-y-auto space-y-1">
-                  {users.map((u) => (
-                    <button
-                      key={u.id}
-                      onClick={() => {
-                        switchUser(u.id);
-                        setIsRoleDropdownOpen(false);
-                      }}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition-colors ${
-                        u.id === activeUser.id
-                          ? 'bg-emerald-50 text-emerald-900 font-bold dark:bg-emerald-950/60 dark:text-emerald-300'
-                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <div>
-                        <div>{u.name}</div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                          {u.email.includes('stanford-athletics') ? 'Staff / Coach' : 'Athlete'}
-                        </div>
-                      </div>
-                      {u.id === activeUser.id && (
-                        <CheckCircle2 size={15} className="text-emerald-600 dark:text-emerald-400" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            </div>
           </div>
 
           {/* Theme Toggle (White / Dark UI) */}

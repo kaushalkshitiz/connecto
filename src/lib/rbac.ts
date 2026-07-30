@@ -63,6 +63,9 @@ export function getDashboardPathForRole(role: UserRole): string {
 export function isRoleAllowedForRoute(role: UserRole, pathname: string): boolean {
   if (pathname.startsWith('/dashboard/unauthorized')) return true;
   if (pathname === '/dashboard/profile') return true;
+  // Tournament & scholarship discovery/registration is open to every role.
+  if (pathname.startsWith('/dashboard/tournaments')) return true;
+  if (pathname.startsWith('/dashboard/scholarships')) return true;
 
   if (role === 'admin') {
     // Admin has full access

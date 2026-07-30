@@ -13,10 +13,24 @@ import {
   Filter,
   Search,
   Trophy,
+  Users,
 } from 'lucide-react';
 
 export default function TournamentsPage() {
-  const { tournaments, toggleTournamentRegistration } = useDemo();
+  const {
+    tournaments,
+    toggleTournamentRegistration,
+    activeRole,
+    activeUser,
+    users,
+    memberships,
+  } = useDemo();
+
+  const isStaffView = activeRole === 'coach' || activeRole === 'admin';
+
+  const athleteUsers = users.filter((u) =>
+    memberships.some((m) => m.user_id === u.id && m.role === 'athlete')
+  );
 
   const [filterSport, setFilterSport] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,10 +75,21 @@ export default function TournamentsPage() {
         </div>
 
         <div className="flex items-center gap-2 rounded-xl bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-900 dark:bg-slate-800 dark:text-slate-200">
-          <Calendar size={15} />
-          <span>
-            {tournaments.filter((t) => t.registered).length} Registered Meet(s)
-          </span>
+          {isStaffView ? (
+            <>
+              <Users size={15} />
+              <span>
+                {tournaments.reduce((sum, t) => sum + t.registeredAthleteIds.length, 0)} Total Registration(s) Across Roster
+              </span>
+            </>
+          ) : (
+            <>
+              <Calendar size={15} />
+              <span>
+                {tournaments.filter((t) => t.registeredAthleteIds.includes(activeUser.id)).length} Registered Meet(s)
+              </span>
+            </>
+          )}
         </div>
       </div>
 
@@ -115,13 +140,25 @@ export default function TournamentsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {visibleTournaments.map((tournament) => (
-            <TournamentCard
-              key={tournament.id}
-              tournament={tournament}
-              onRegisterToggle={(id) => toggleTournamentRegistration(id)}
-            />
-          ))}
+          {visibleTournaments.map((tournament) =>
+            isStaffView ? (
+              <TournamentCard
+                key={tournament.id}
+                tournament={tournament}
+                registrants={athleteUsers
+                  .filter((a) => tournament.registeredAthleteIds.includes(a.id))
+                  .map((a) => ({ id: a.id, name: a.name }))}
+                totalEligible={athleteUsers.length}
+              />
+            ) : (
+              <TournamentCard
+                key={tournament.id}
+                tournament={tournament}
+                isRegistered={tournament.registeredAthleteIds.includes(activeUser.id)}
+                onRegisterToggle={(id) => toggleTournamentRegistration(id)}
+              />
+            )
+          )}
         </div>
       )}
     </div>

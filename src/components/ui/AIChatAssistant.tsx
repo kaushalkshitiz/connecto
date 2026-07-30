@@ -8,11 +8,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AIAssistantRole, ChatMessage } from '../../types';
 import {
-  chatWithAdmin,
-  chatWithAthlete,
-  chatWithCoach,
   AthleteContextInput,
   CoachContextInput,
+  buildAthleteFactSheet,
+  buildCoachFactSheet,
 } from '../../services/ai';
 import {
   Bot,
@@ -106,7 +105,21 @@ export function AIChatAssistant({
     }
   }, [messages, isTyping, isExpanded]);
 
-  const handleSend = (queryText?: string) => {
+  const factSheet =
+    role === 'athlete' && athleteContext
+      ? buildAthleteFactSheet(athleteContext)
+      : (role === 'coach' || role === 'admin') && coachContext
+      ? buildCoachFactSheet(coachContext)
+      : null;
+
+  const systemPrompt =
+    role === 'athlete'
+      ? `You are a friendly assistant embedded in a college athletics platform, talking to the student-athlete ${athleteContext?.athlete.name || ''}. Use ONLY the real platform data provided below to answer personal questions and give suggestions — never invent numbers, stats, or events that are not in this data. If the answer isn't in the data, say additional check-in history is needed. Never give a medical diagnosis or personalized medical advice; for medical concerns, point them to their physio.\n\n=== ATHLETE DATA ===\n${factSheet || 'No data available yet.'}\n=== END DATA ===`
+      : role === 'coach'
+      ? `You are a friendly assistant embedded in a college athletics platform, talking to a coach. Use ONLY the real roster data provided below to answer questions and give suggestions about specific athletes, training load, or check-in adherence — never invent athlete names or stats that are not in this data. If the answer isn't in the data, say so. Never give a medical diagnosis.\n\n=== ROSTER DATA ===\n${factSheet || 'No data available yet.'}\n=== END DATA ===`
+      : `You are a friendly assistant embedded in a college athletics platform, talking to an athletics department admin. Use ONLY the real department data provided below to answer questions and give suggestions — never invent stats that are not in this data. If the answer isn't in the data, say so.\n\n=== DEPARTMENT DATA ===\n${factSheet || 'No data available yet.'}\n=== END DATA ===`;
+
+  const handleSend = async (queryText?: string) => {
     const question = (queryText || input).trim();
     if (!question || isTyping) return;
 
@@ -122,47 +135,47 @@ export function AIChatAssistant({
     if (!queryText) setInput('');
     setIsTyping(true);
 
-    // Simulate progressive token generation / computation delay
-    setTimeout(() => {
-      let result = {
-        response: 'Additional check-in data is required to process this request.',
-        suggestedQuestions: defaultSuggestions,
-        contextUsed: [] as string[],
-      };
+    try {
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...newHistory.map((m) => ({
+              role: m.sender === 'user' ? 'user' : 'assistant',
+              content: m.text,
+            })),
+          ],
+        }),
+      });
 
-      if (role === 'athlete' && athleteContext) {
-        result = chatWithAthlete(
-          question,
-          athleteContext,
-          newHistory.map((m) => ({ sender: m.sender, text: m.text }))
-        );
-      } else if (role === 'coach' && coachContext) {
-        result = chatWithCoach(
-          question,
-          coachContext,
-          newHistory.map((m) => ({ sender: m.sender, text: m.text }))
-        );
-      } else if (role === 'admin' && coachContext) {
-        result = chatWithAdmin(
-          question,
-          coachContext,
-          newHistory.map((m) => ({ sender: m.sender, text: m.text }))
-        );
-      }
+      const data = await res.json();
 
       const aiMsg: ChatMessage = {
         id: `msg-ai-${Date.now()}`,
         sender: 'ai',
-        text: result.response,
+        text: res.ok
+          ? data.reply
+          : `⚠️ ${data.error || 'The local AI model could not be reached.'}`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        suggestedQuestions: result.suggestedQuestions,
-        contextUsed: result.contextUsed,
+        suggestedQuestions: defaultSuggestions,
       };
 
       setMessages((prev) => [...prev, aiMsg]);
-      setCurrentSuggestions(result.suggestedQuestions);
+      setCurrentSuggestions(defaultSuggestions);
+    } catch {
+      const aiMsg: ChatMessage = {
+        id: `msg-ai-${Date.now()}`,
+        sender: 'ai',
+        text: '⚠️ Could not reach the local AI service. Make sure Ollama is running (`ollama serve`) with the gemma4 model pulled (`ollama pull gemma4`).',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        suggestedQuestions: defaultSuggestions,
+      };
+      setMessages((prev) => [...prev, aiMsg]);
+    } finally {
       setIsTyping(false);
-    }, 600);
+    }
   };
 
   const handleCopy = (id: string, text: string) => {

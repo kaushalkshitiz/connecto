@@ -62,6 +62,98 @@ const MEDICAL_DISCLAIMER =
   '\n\n*Note: Recommendations are based only on available check-in data and are informational. They do not constitute personalized medical advice.*';
 
 /**
+ * buildAthleteFactSheet() / buildCoachFactSheet()
+ * Serialize an athlete's or coach's real platform data into a plain-text fact
+ * sheet that can be handed to the local LLM as grounding context, so it can
+ * answer personal questions without inventing statistics (CLAUDE.md AI Rules).
+ */
+export function buildAthleteFactSheet(context: AthleteContextInput): string {
+  const {
+    athlete,
+    profile,
+    currentRisk,
+    checkIns,
+    physioNotes,
+    observations,
+    sevenDayAvgSleep,
+    sevenDayAvgSoreness,
+    sevenDayAvgMood,
+    daysSinceLastCheckIn,
+  } = context;
+
+  const sport = profile ? `${profile.sport} (${profile.specialty})` : 'Individual Sport';
+
+  const recentCheckIns = [...checkIns]
+    .sort((a, b) => (a.date > b.date ? -1 : 1))
+    .slice(0, 14)
+    .map(
+      (c) =>
+        `${c.date}: sleep ${c.sleep_hours}h, soreness ${c.soreness}/5, mood ${c.mood}/5` +
+        (c.rpe !== null ? `, RPE ${c.rpe}` : '') +
+        (c.note ? `, note: "${c.note}"` : '')
+    )
+    .join('\n');
+
+  const physio = physioNotes.length
+    ? physioNotes.map((p) => `${p.date} [${p.status}]: ${p.note}`).join('\n')
+    : 'None recorded.';
+
+  const coachNotes = observations.length
+    ? observations.map((o) => `${o.date} (${o.coach_name || 'Coach'}): ${o.note}`).join('\n')
+    : 'None recorded.';
+
+  return [
+    `Athlete: ${athlete.name}`,
+    `Sport: ${sport}`,
+    `Current Risk Level: ${currentRisk.level.toUpperCase()} — ${currentRisk.reason}`,
+    `7-Day Avg Sleep: ${sevenDayAvgSleep ?? 'N/A'} hours`,
+    `7-Day Avg Soreness: ${sevenDayAvgSoreness ?? 'N/A'} / 5`,
+    `7-Day Avg Mood: ${sevenDayAvgMood ?? 'N/A'} / 5`,
+    `Days Since Last Check-In: ${daysSinceLastCheckIn}`,
+    `Recent Check-Ins (most recent first):\n${recentCheckIns || 'No check-ins recorded.'}`,
+    `Physio / Medical Notes:\n${physio}`,
+    `Coach Observations:\n${coachNotes}`,
+  ].join('\n\n');
+}
+
+export function buildCoachFactSheet(context: CoachContextInput): string {
+  const { teamName, athletes, riskFlags, checkIns, physioNotes, observations } = context;
+
+  const roster = athletes
+    .map((a) => {
+      const risk = riskFlags.find((r) => r.athlete_id === a.id);
+      const athleteCheckIns = checkIns.filter((c) => c.athlete_id === a.id);
+      const sorted = [...athleteCheckIns].sort((x, y) => (x.date > y.date ? -1 : 1));
+      const lastCheckIn = sorted[0]?.date || 'never';
+      const activeInjury = physioNotes.find(
+        (p) => p.athlete_id === a.id && p.status.toLowerCase() === 'active'
+      );
+      return (
+        `${a.name}: risk=${risk ? risk.level.toUpperCase() : 'LOW'}` +
+        (risk ? ` (${risk.reason})` : '') +
+        `, last check-in=${lastCheckIn}` +
+        (activeInjury ? `, active injury: ${activeInjury.note}` : '')
+      );
+    })
+    .join('\n');
+
+  const recentObservations = observations
+    .slice(0, 15)
+    .map((o) => {
+      const a = athletes.find((u) => u.id === o.athlete_id);
+      return `${o.date} — ${a ? a.name : 'Athlete'} (${o.coach_name || 'Coach'}): ${o.note}`;
+    })
+    .join('\n');
+
+  return [
+    `Team: ${teamName}`,
+    `Total Athletes: ${athletes.length}`,
+    `Roster:\n${roster || 'No athletes on roster.'}`,
+    `Recent Coach Observations:\n${recentObservations || 'None recorded.'}`,
+  ].join('\n\n');
+}
+
+/**
  * 1. generateAthleteSummary()
  * Generates a natural language summary of an athlete's current physiological & load metrics.
  */

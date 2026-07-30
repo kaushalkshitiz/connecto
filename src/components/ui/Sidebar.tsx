@@ -112,13 +112,15 @@ export function Sidebar() {
           <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
             Platform Menu
           </p>
-          {navItems.map((item) => {
+          {navItems
+            .filter((item) => item.roles.includes(activeRole))
+            .map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
 
             return (
               <Link
-                key={item.href}
+                key={item.label}
                 href={item.href}
                 className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-medium transition-all ${
                   isActive

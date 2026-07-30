@@ -17,13 +17,14 @@ import {
   YAxis,
 } from 'recharts';
 import { RiskFlag } from '../../types';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, Eye, CheckCircle2 } from 'lucide-react';
 
 interface RiskTimelineChartProps {
   riskFlags: RiskFlag[];
+  athletes?: { id: string; name: string }[];
 }
 
-export function RiskTimelineChart({ riskFlags }: RiskTimelineChartProps) {
+export function RiskTimelineChart({ riskFlags, athletes }: RiskTimelineChartProps) {
   // Aggregate flags by date
   const dateMap: Record<string, { date: string; High: number; Watch: number; Low: number }> = {};
 
@@ -60,10 +61,10 @@ export function RiskTimelineChart({ riskFlags }: RiskTimelineChartProps) {
           </div>
           <div>
             <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-              Risk Level Timeline (Rule-Based Determinations)
+              Risk Level Timeline
             </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Stacked distribution of High, Watch, and Low risk flags (§3.5)
+              Distribution of High, Watch, and Low risk athletes across the roster
             </p>
           </div>
         </div>
@@ -118,6 +119,43 @@ export function RiskTimelineChart({ riskFlags }: RiskTimelineChartProps) {
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Roster Breakdown: which athletes are at each risk level */}
+      {athletes && (
+        <div className="mt-5 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+          {(
+            [
+              { level: 'high', label: 'High Risk', icon: AlertTriangle, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/40' },
+              { level: 'watch', label: 'Watch', icon: Eye, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+              { level: 'low', label: 'Low Risk', icon: CheckCircle2, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
+            ] as const
+          ).map(({ level, label, icon: Icon, color, bg }) => {
+            const flagsAtLevel = riskFlags.filter((rf) => rf.level === level);
+            if (flagsAtLevel.length === 0) return null;
+            return (
+              <div key={level} className={`rounded-xl p-3.5 ${bg}`}>
+                <div className={`flex items-center gap-1.5 text-xs font-bold ${color}`}>
+                  <Icon size={14} />
+                  <span>{label} ({flagsAtLevel.length})</span>
+                </div>
+                <ul className="mt-2 space-y-1.5">
+                  {flagsAtLevel.map((rf) => {
+                    const athlete = athletes.find((a) => a.id === rf.athlete_id);
+                    return (
+                      <li key={rf.athlete_id} className="text-xs text-slate-700 dark:text-slate-300">
+                        <span className="font-semibold text-slate-900 dark:text-white">
+                          {athlete?.name || 'Unknown Athlete'}
+                        </span>
+                        <span className="text-slate-500 dark:text-slate-400"> — {rf.reason}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
