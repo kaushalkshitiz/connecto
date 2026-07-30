@@ -284,7 +284,7 @@ export default function HomePage() {
             Context-Aware AI Assistant
           </h3>
           <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-            Role-tailored AI assistant answers readiness queries, summarizes caseloads, and explains deterministic rule triggers (§3.5) while strictly honoring user permissions.
+            Role-tailored AI assistant answers readiness queries, summarizes caseloads, and explains risk triggers while strictly honoring user permissions.
           </p>
         </div>
 

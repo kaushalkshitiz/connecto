@@ -73,7 +73,11 @@ export function isRoleAllowedForRoute(role: UserRole, pathname: string): boolean
   }
 
   if (role === 'athlete') {
-    return pathname.startsWith('/dashboard/athlete');
+    // Athletes manage their own dashboard and assigned training tasks.
+    return (
+      pathname.startsWith('/dashboard/athlete') ||
+      pathname.startsWith('/dashboard/tasks')
+    );
   }
 
   if (role === 'coach') {

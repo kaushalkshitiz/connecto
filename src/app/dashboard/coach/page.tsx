@@ -246,7 +246,7 @@ export default function CoachDashboardPage() {
               <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-blue-900 dark:bg-blue-950 dark:text-blue-300">
                 AI Roster Executive Report
               </span>
-              <span className="text-xs font-bold text-slate-400">Deterministic (§3.5)</span>
+              <span className="text-xs font-bold text-slate-400">Updated Daily</span>
             </div>
             <h3 className="mt-3 text-base font-black text-slate-900 dark:text-white">
               {team.name} Roster Overview
@@ -530,7 +530,7 @@ export default function CoachDashboardPage() {
                       </td>
                       <td className="px-5 py-4 text-right">
                         <Link
-                          href={`/dashboard/coach/athlete/${athlete.id}`}
+                          href={`/dashboard/coach/${athlete.id}`}
                           className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 font-bold text-blue-900 hover:bg-slate-50 dark:border-slate-700 dark:text-emerald-400 dark:hover:bg-slate-800"
                         >
                           <span>Analyze</span>

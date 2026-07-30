@@ -219,7 +219,7 @@ export default function AdminDashboardPage() {
               </h3>
             </div>
             <span className="text-xs font-bold text-slate-400">
-              Deterministic Rule Engine (§3.5 / §4.7)
+              Generated from Verified Data
             </span>
           </div>
 

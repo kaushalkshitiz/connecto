@@ -10,6 +10,7 @@ import { useDemo } from '../../../context/DemoContext';
 import { TaskAssignModal } from '../../../components/forms/TaskAssignModal';
 import { TaskProofModal } from '../../../components/forms/TaskProofModal';
 import { TaskCard } from '../../../components/ui/TaskCard';
+import { canEditTrainingPlans } from '../../../lib/rbac';
 import { TaskStatus, TrainingTask } from '../../../types';
 import {
   CheckCircle2,
@@ -30,7 +31,7 @@ export default function TasksPage() {
     updateTaskStatus,
   } = useDemo();
 
-  const isCoach = activeRole === 'coach' || activeRole === 'admin' || activeRole === 'physio';
+  const isCoach = canEditTrainingPlans(activeRole);
 
   const [filterCategory, setFilterCategory] = useState<string>('All');
   const [filterStatus, setFilterStatus] = useState<string>('All');

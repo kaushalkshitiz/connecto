@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useDemo } from '../../../context/DemoContext';
 import { RiskBadge } from '../../../components/ui/RiskBadge';
 import { PhysioModal } from '../../../components/forms/PhysioModal';
+import { canEditMedicalRecords, isRoleAllowedForRoute } from '../../../lib/rbac';
 import {
   AlertCircle,
   Calendar,
@@ -22,7 +23,9 @@ import {
 } from 'lucide-react';
 
 export default function PhysioDashboardPage() {
-  const { users, memberships, physioNotes, riskFlags, team } = useDemo();
+  const { users, memberships, physioNotes, riskFlags, team, activeRole } = useDemo();
+
+  const canLogTreatment = canEditMedicalRecords(activeRole);
 
   const athleteUsers = users.filter((u) =>
     memberships.some((m) => m.user_id === u.id && m.role === 'athlete')
@@ -90,27 +93,29 @@ export default function PhysioDashboardPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={selectedAthleteId}
-            onChange={(e) => setSelectedAthleteId(e.target.value)}
-            className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-          >
-            {athleteUsers.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name} ({a.email.split('@')[0]})
-              </option>
-            ))}
-          </select>
+        {canLogTreatment && (
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={selectedAthleteId}
+              onChange={(e) => setSelectedAthleteId(e.target.value)}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+            >
+              {athleteUsers.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name} ({a.email.split('@')[0]})
+                </option>
+              ))}
+            </select>
 
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-500 dark:to-emerald-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-teal-600/25 dark:shadow-teal-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:from-teal-700 hover:to-emerald-700"
-          >
-            <Plus size={18} />
-            <span>Log Injury / Treatment</span>
-          </button>
-        </div>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-500 dark:to-emerald-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-teal-600/25 dark:shadow-teal-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:from-teal-700 hover:to-emerald-700"
+            >
+              <Plus size={18} />
+              <span>Log Injury / Treatment</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Rule & Stats Bar */}
@@ -118,7 +123,7 @@ export default function PhysioDashboardPage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-teal-900/40 dark:bg-teal-950/20 transition-all">
           <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-300">
             <ShieldAlert size={15} />
-            <span>Rule-Based Synergy (§3.5)</span>
+            <span>Automatic Risk Escalation</span>
           </div>
           <p className="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
             An <strong className="text-slate-900 dark:text-white">Active Injury</strong> note combined with any Watch condition automatically elevates an athlete to <strong className="text-rose-600 dark:text-rose-400">High Risk</strong>.
@@ -223,12 +228,16 @@ export default function PhysioDashboardPage() {
 
                       <td className="py-4 px-4 font-bold text-slate-800 dark:text-slate-200">
                         {athlete ? (
-                          <Link
-                            href={`/dashboard/coach/${athlete.id}`}
-                            className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-                          >
-                            {athlete.name}
-                          </Link>
+                          isRoleAllowedForRoute(activeRole, `/dashboard/coach/${athlete.id}`) ? (
+                            <Link
+                              href={`/dashboard/coach/${athlete.id}`}
+                              className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                            >
+                              {athlete.name}
+                            </Link>
+                          ) : (
+                            <span>{athlete.name}</span>
+                          )
                         ) : (
                           'Unknown Athlete'
                         )}

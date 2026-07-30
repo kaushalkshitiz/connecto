@@ -11,12 +11,8 @@ import { usePathname } from 'next/navigation';
 import { useDemo } from '../../context/DemoContext';
 import { getDashboardPathForRole } from '../../lib/rbac';
 import {
-  Activity,
-  Award,
   BookOpen,
-  Calendar,
   CheckSquare,
-  FileText,
   GraduationCap,
   HeartPulse,
   LayoutDashboard,
@@ -32,8 +28,6 @@ export function Sidebar() {
   const pathname = usePathname();
   const { activeRole, team, logout } = useDemo();
 
-  const isCoachOrStaff = activeRole === 'coach' || activeRole === 'admin' || activeRole === 'physio';
-
   const navItems = [
     {
       label: 'Overview',
@@ -45,7 +39,7 @@ export function Sidebar() {
       label: 'Tasks & Training',
       href: '/dashboard/tasks',
       icon: CheckSquare,
-      roles: ['coach', 'athlete', 'physio', 'admin', 'academic'],
+      roles: ['coach', 'athlete', 'admin'],
       badge: 'New',
     },
     {
@@ -64,19 +58,19 @@ export function Sidebar() {
       label: 'Academic & Exams',
       href: '/dashboard/academic',
       icon: BookOpen,
-      roles: ['coach', 'athlete', 'physio', 'admin', 'academic'],
+      roles: ['admin', 'academic'],
     },
     {
       label: 'Medical & Rehab',
       href: '/dashboard/physio',
       icon: HeartPulse,
-      roles: ['coach', 'athlete', 'physio', 'admin', 'academic'],
+      roles: ['physio', 'admin'],
     },
     {
       label: 'Team Security (RLS)',
       href: '/dashboard/admin',
       icon: ShieldAlert,
-      roles: ['coach', 'physio', 'admin'],
+      roles: ['admin'],
     },
     {
       label: 'My Profile',

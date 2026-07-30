@@ -227,12 +227,14 @@ export function generateAthleteSummary(input: AthleteContextInput): {
     keyPoints.push(`**Coach Observation**: "${recentObs[0].note}"`);
   }
 
+  // The 7-day sleep/soreness averages are already listed in keyPoints below,
+  // so the summary paragraph only states the risk level and its primary driver.
   const summaryText =
     `**${athlete.name}** (${sportInfo}) is currently flagged as **${currentRisk.level.toUpperCase()}** risk. ` +
-    `Primary rule driver: ${currentRisk.reason}. ` +
+    `Primary driver: ${currentRisk.reason}.` +
     (sevenDayAvgSleep !== null && sevenDayAvgSoreness !== null
-      ? `Over the last 7 days, sleep averaged **${sevenDayAvgSleep} hrs/night** and muscle soreness averaged **${sevenDayAvgSoreness}/5.0**.`
-      : 'Additional historical check-in data is recommended for comprehensive trend tracking.');
+      ? ''
+      : ' Additional historical check-in data is recommended for comprehensive trend tracking.');
 
   return {
     title: `${currentRisk.level.toUpperCase()} Readiness Assessment`,
@@ -348,11 +350,11 @@ export function summarizeRiskChanges(input: CoachContextInput): {
   });
 
   return {
-    headline: `Rule-Based Risk Assessment Overview (${changes.length} Active Flag${
+    headline: `Risk Assessment Overview (${changes.length} Active Flag${
       changes.length === 1 ? '' : 's'
     })`,
     explanation:
-      'All risk scores are deterministically computed per spec.md rules without machine learning prediction. Below are the verified physiological triggers:',
+      'Every risk score is computed from verified check-in data. Below are the physiological triggers behind each active flag:',
     changes,
   };
 }
@@ -509,7 +511,7 @@ export function chatWithAthlete(
   } else if (q.includes('dashboard') || q.includes('explain')) {
     response =
       `### How Your Dashboard Works\n\n` +
-      `Your Athlete Dashboard brings together your self-reported data, rule-based risk scoring, and staff feedback:\n\n` +
+      `Your Athlete Dashboard brings together your self-reported data, risk scoring, and staff feedback:\n\n` +
       `1. **Current Risk Status:** Deterministically calculated based on 3 rules: 7-day sleep < 6h, 7-day soreness >= 4/5, or no check-in for 4+ days.\n` +
       `2. **7-Day Averages:** Shows your rolling sleep, soreness, and mood over the past week.\n` +
       `3. **Training & Recovery Tasks:** Actionable assignments from your coach (video review, cold baths, drills).\n` +
@@ -893,7 +895,7 @@ export function generateDepartmentSummary(input: CoachContextInput): AIInsightRe
     `• **Watch Risk:** **${watchCount}** (${Math.round((watchCount / Math.max(athletes.length, 1)) * 100)}% of roster)\n` +
     `• **Low Risk:** **${athletes.length - highCount - watchCount}**\n\n` +
     `#### 3. Primary Insights\n` +
-    `Rule-based scoring accurately identified athletes experiencing academic mid-term fatigue and training load spikes without machine learning black-box assumptions.`;
+    `Risk scoring accurately identified athletes experiencing academic mid-term fatigue and training load spikes.`;
 
   return {
     id: `aii-dept-${Date.now()}`,

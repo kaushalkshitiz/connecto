@@ -166,7 +166,7 @@ export default function AthleteDashboardPage() {
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                 AI Executive Assessment
               </span>
-              <span className="text-xs font-bold text-slate-400">Rule-Based (§3.5)</span>
+              <span className="text-xs font-bold text-slate-400">Updated Daily</span>
             </div>
             <h3 className="mt-3 text-base font-black text-slate-900 dark:text-white">
               {aiReadinessSummary.title}

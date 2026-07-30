@@ -13,19 +13,13 @@ import { RiskBadge } from '../../../../components/ui/RiskBadge';
 import { RiskTrendChart } from '../../../../components/charts/RiskTrendChart';
 import { ObservationModal } from '../../../../components/forms/ObservationModal';
 import { PhysioModal } from '../../../../components/forms/PhysioModal';
-import { CheckInModal } from '../../../../components/forms/CheckInModal';
+import { canEditMedicalRecords } from '../../../../lib/rbac';
 import {
-  Activity,
   ArrowLeft,
   Calendar,
-  Clock,
   Eye,
   HeartPulse,
   Info,
-  Moon,
-  Plus,
-  Smile,
-  Zap,
 } from 'lucide-react';
 
 export default function AthleteDetailPage() {
@@ -33,14 +27,15 @@ export default function AthleteDetailPage() {
   const athleteId =
     typeof params.athleteId === 'string' ? params.athleteId : '';
 
-  const { getAthleteRiskSummary, users } = useDemo();
+  const { getAthleteRiskSummary, users, activeRole } = useDemo();
 
   const athleteUser = users.find((u) => u.id === athleteId);
   const summary = getAthleteRiskSummary(athleteId);
 
   const [isObsModalOpen, setIsObsModalOpen] = useState(false);
   const [isPhysioModalOpen, setIsPhysioModalOpen] = useState(false);
-  const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
+
+  const canLogInjury = canEditMedicalRecords(activeRole);
 
   if (!athleteUser) {
     return (
@@ -105,28 +100,23 @@ export default function AthleteDetailPage() {
             <Eye size={15} />
             <span>Log Observation</span>
           </button>
-          <button
-            onClick={() => setIsPhysioModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-teal-500/25 transition-all hover:-translate-y-0.5 hover:bg-teal-700"
-          >
-            <HeartPulse size={15} />
-            <span>Log Injury / Physio</span>
-          </button>
-          <button
-            onClick={() => setIsCheckInModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-800 shadow-sm transition-all hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-700"
-          >
-            <Plus size={15} />
-            <span>Submit Check-In</span>
-          </button>
+          {canLogInjury && (
+            <button
+              onClick={() => setIsPhysioModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-teal-500/25 transition-all hover:-translate-y-0.5 hover:bg-teal-700"
+            >
+              <HeartPulse size={15} />
+              <span>Log Injury / Physio</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Human-Readable Explainable Reason Box (§3.5 Requirement) */}
+      {/* Human-Readable Explainable Reason Box */}
       <div className="rounded-2xl border border-blue-200 bg-blue-50/90 p-5 shadow-sm dark:border-blue-900/40 dark:bg-blue-950/20 transition-all">
         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
           <Info size={16} />
-          <span>Explainable Rule-Based Trigger (§3.5)</span>
+          <span>Why This Risk Level</span>
         </div>
         <p className="mt-1.5 text-sm font-medium leading-relaxed text-slate-800 dark:text-slate-200">
           {summary.currentRisk.reason}
@@ -316,11 +306,6 @@ export default function AthleteDetailPage() {
       <PhysioModal
         isOpen={isPhysioModalOpen}
         onClose={() => setIsPhysioModalOpen(false)}
-        athleteId={athleteId}
-      />
-      <CheckInModal
-        isOpen={isCheckInModalOpen}
-        onClose={() => setIsCheckInModalOpen(false)}
         athleteId={athleteId}
       />
     </div>
